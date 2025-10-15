@@ -29,10 +29,10 @@ class ReportResource extends Resource
         return __('ui.card_reading_reports');
     }
 
-//    public static function getNavigationGroup(): ?string
-//    {
-//        return __('ui.report_management');
-//    }
+    public static function getNavigationGroup(): ?string
+    {
+        return __('ui.report_management');
+    }
 
     public static function form(Form $form): Form
     {

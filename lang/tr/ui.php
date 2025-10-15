@@ -328,4 +328,9 @@ return [
     'in_out_reports' => 'Giriş/Çıkış Raporları',
     'card_reading_report' => 'Kart Okutma Raporu',
     'card_reading_reports' => 'Kart Okutma Raporları',
+    'manager' => 'Yönetici',
+    'managers' => 'Yöneticiler',
+    'manager_management' => 'Yönetici Yönetimi',
+    'manager_information' => 'Yönetici Bilgileri',
+    'copied_to_clipboard' => 'Panoya kopyalandı',
 ];
