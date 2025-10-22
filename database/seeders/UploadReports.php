@@ -16,7 +16,9 @@ class UploadReports extends Seeder
     public function run(): void
     {
         try {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
             DB::table('reports')->truncate();
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
 
             $service = new ReportService();
 
@@ -26,7 +28,9 @@ class UploadReports extends Seeder
 
             $this->command->info("Toplam {$processedCount} kayıt işlendi.");
         } catch (\Exception $e) {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;'); // Hata durumunda da foreign key kontrollerini geri aç
             $this->command->error('Hata: ' . $e->getMessage());
+            Log::error('UploadReports seeder hatası: ' . $e->getMessage());
         }
     }
 }

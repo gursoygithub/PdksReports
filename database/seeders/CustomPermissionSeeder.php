@@ -17,6 +17,7 @@ class CustomPermissionSeeder extends Seeder
             'view_all_users',
             'view_tc_no',
             'view_all_managers',
+            'view_all_staff',
         ];
 
         foreach ($permissionName as $name) {

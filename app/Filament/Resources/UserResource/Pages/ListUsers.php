@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\UserResource\Pages;
 
+use App\Enums\ManagerStatusEnum;
 use App\Filament\Resources\UserResource;
 use App\Models\User;
 use Filament\Actions;
@@ -67,7 +68,7 @@ class ListUsers extends ListRecords
         });
 
     // "Active" tab
-    $activeQuery = User::query()->where('status', 1);
+    $activeQuery = User::query()->where('status', ManagerStatusEnum::ACTIVE);
     if (!$canViewAllUsers) {
         $activeQuery->where('created_by', auth()->id());
     }
@@ -77,7 +78,7 @@ class ListUsers extends ListRecords
         ->badgeIcon('heroicon-o-check-circle')
         ->badgeColor('success')
         ->modifyQueryUsing(function ($query) use ($canViewAllUsers) {
-            $query->where('status', 1);
+            $query->where('status', ManagerStatusEnum::ACTIVE);
             if (!$canViewAllUsers) {
                 $query->where('created_by', auth()->id());
             }
@@ -85,7 +86,7 @@ class ListUsers extends ListRecords
         });
 
     // "Inactive" tab
-    $inactiveQuery = User::query()->where('status', 0);
+    $inactiveQuery = User::query()->where('status', ManagerStatusEnum::INACTIVE);
     if (!$canViewAllUsers) {
         $inactiveQuery->where('created_by', auth()->id());
     }
@@ -95,7 +96,7 @@ class ListUsers extends ListRecords
         ->badgeIcon('heroicon-o-x-circle')
         ->badgeColor('danger')
         ->modifyQueryUsing(function ($query) use ($canViewAllUsers) {
-            $query->where('status', 0);
+            $query->where('status', ManagerStatusEnum::INACTIVE);
             if (!$canViewAllUsers) {
                 $query->where('created_by', auth()->id());
             }

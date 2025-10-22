@@ -44,6 +44,7 @@ class ReportService
                     'first_reading'  => $data->first_reading,
                     'last_reading'   => $data->last_reading,
                     'working_time'   => $data->working_time,
+                    'status'         => $data->status,
                     'created_at'     => now(),
                     'updated_at'     => now(),
                 ];
@@ -61,6 +62,7 @@ class ReportService
                             'first_reading',
                             'last_reading',
                             'working_time',
+                            'status',
                             'updated_at',
                         ]
                     );
@@ -84,6 +86,7 @@ class ReportService
                         'first_reading',
                         'last_reading',
                         'working_time',
+                        'status',
                         'updated_at',
                     ]
                 );

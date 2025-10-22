@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ActiveStatusEnum;
+use App\Enums\ManagerStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,8 +13,7 @@ class Manager extends Model
     use Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'report_id',
-        'email',
+        'user_id',
         'status',
         'created_by',
         'updated_by',
@@ -21,12 +21,12 @@ class Manager extends Model
     ];
 
     protected $casts = [
-        'status' => ActiveStatusEnum::class,
+        'status' => ManagerStatusEnum::class,
     ];
 
-    public function report()
+    public function user()
     {
-        return $this->belongsTo(Report::class);
+        return $this->belongsTo(User::class);
     }
 
     public function createdBy()

@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('managers', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('report_id')->constrained()->onDelete('cascade');
-            $table->string('email')->nullable();
-            $table->tinyInteger('status')->default(1);
+            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
+            //$table->string('email')->nullable();
+            $table->tinyInteger('status')->default(0); // 0: ACTIVE, 100: INACTIVE
 
             $table->string('created_by');
             $table->string('updated_by')->nullable();
@@ -24,8 +24,6 @@ return new class extends Migration
 
             $table->timestamps();
             $table->softDeletes();
-
-            $table->unique(['email', 'deleted_at']);
         });
     }
 

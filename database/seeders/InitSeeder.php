@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\ManagerStatusEnum;
 use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use App\Models\User;
@@ -18,10 +19,11 @@ class InitSeeder extends Seeder
         $checkUserTable = User::count();
         if ($checkUserTable == 0) {
             User::create([
+                'tc_no' => '00000000000',
                 'name' => 'Admin',
                 'email' => 'sa@app.com',
                 'password' => 'password',
-                'status' => ActiveStatusEnum::ACTIVE,
+                'status' => ManagerStatusEnum::ACTIVE,
                 'created_by' => 1,
             ]);
         }

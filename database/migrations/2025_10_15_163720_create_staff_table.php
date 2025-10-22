@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::create('staff', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('manager_id')->constrained()->onDelete('cascade');
-            $table->tinyInteger('status')->default(1);
+
+            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('report_id')->constrained('reports')->onDelete('cascade');
+
             $table->boolean('is_mailable')->default(true);
 
             $table->string('created_by');
@@ -24,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->unique(['manager_id', 'deleted_at']);
+            $table->unique(['user_id', 'report_id', 'deleted_at']);
         });
     }
 

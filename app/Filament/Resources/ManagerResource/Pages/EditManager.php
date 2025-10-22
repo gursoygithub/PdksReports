@@ -27,6 +27,7 @@ class EditManager extends EditRecord
     protected function mutateFormDataBeforeSave(array $data): array
     {
         $data['updated_by'] = auth()->id();
+
         return $data;
     }
 }

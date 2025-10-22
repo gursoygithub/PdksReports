@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
+use App\Models\Report;
 use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,15 @@ class CreateUser extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['created_by'] = auth()->user()->id;
+
+        try {
+            $staff = Report::query()->findOrFail($data['name']);
+            $data['tc_no'] = $staff->tc_no;
+            $data['name'] = $staff->full_name;
+            $data['status'] = \App\Enums\ManagerStatusEnum::ACTIVE;
+        } catch (\Exception $e) {
+            session()->flash('error', 'Kullanıcı bulunamadı.');
+        }
 
 //        if (isset($data['project_id'])) {
 //

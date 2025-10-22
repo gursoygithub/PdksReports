@@ -66,34 +66,34 @@ class ViewManager extends ViewRecord
                     ->schema([
                         Infolists\Components\Fieldset::make(__('ui.manager_information'))
                             ->schema([
-                                Infolists\Components\TextEntry::make('report.tc_no')
+                                Infolists\Components\TextEntry::make('user.tc_no')
                                     ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_tc_no'))
                                     ->label(__('ui.tc_no'))
                                     ->icon('heroicon-o-identification')
                                     ->copyable()
                                     ->copyMessage(__('ui.copied_to_clipboard'))
                                     ->placeholder('-'),
-                                Infolists\Components\TextEntry::make('report.full_name')
+                                Infolists\Components\TextEntry::make('user.name')
                                     ->label(__('ui.full_name'))
                                     ->badge()
                                     ->color('primary')
                                     ->icon('heroicon-o-user')
                                     ->placeholder('-'),
-                                Infolists\Components\TextEntry::make('email')
+                                Infolists\Components\TextEntry::make('user.email')
                                     ->label(__('ui.email'))
                                     ->icon('heroicon-o-envelope')
                                     ->copyable()
                                     ->copyMessage(__('ui.copied_to_clipboard'))
                                     ->placeholder('-'),
-                                Infolists\Components\TextEntry::make('report.department_name')
+                                Infolists\Components\TextEntry::make('user.report.department_name')
                                     ->label(__('ui.department'))
                                     ->icon('heroicon-o-building-office')
                                     ->placeholder('-'),
-                                Infolists\Components\TextEntry::make('report.position_name')
+                                Infolists\Components\TextEntry::make('user.report.position_name')
                                     ->label(__('ui.position'))
                                     ->icon('heroicon-o-briefcase')
                                     ->placeholder('-'),
-                                Infolists\Components\TextEntry::make('status')
+                                Infolists\Components\TextEntry::make('user.status')
                                     ->label(__('ui.status'))
                                     ->badge()
                                     ->placeholder('-'),

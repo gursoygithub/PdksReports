@@ -20,6 +20,15 @@ class CreateManager extends CreateRecord
     protected function mutateFormDataBeforeCreate(array $data): array
     {
         $data['created_by'] = auth()->id();
+
+        // set related user is_manager to true
+        $user = \App\Models\User::find($data['user_id']);
+
+        if ($user) {
+            $user->is_manager = true;
+            $user->save();
+        }
+
         return $data;
     }
 }
