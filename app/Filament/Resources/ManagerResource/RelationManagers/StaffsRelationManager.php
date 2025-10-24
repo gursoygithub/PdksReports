@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\UserResource\RelationManagers;
+namespace App\Filament\Resources\ManagerResource\RelationManagers;
 
 use App\Enums\ManagerStatusEnum;
 use App\Models\Report;
@@ -22,17 +22,17 @@ class StaffsRelationManager extends RelationManager
 
     protected static function getModelLabel(): ?string
     {
-        return __('ui.staff');
+        return __('ui.staff_under_manager');
     }
 
     protected static function getPluralModelLabel(): ?string
     {
-        return __('ui.staffs');
+        return __('ui.staffs_under_manager');
     }
 
     public static function getTitle(Model $ownerRecord, string $pageClass): string
     {
-        return __('ui.staffs');
+        return __('ui.staffs_under_manager');
     }
 
     public function form(Form $form): Form
@@ -48,34 +48,54 @@ class StaffsRelationManager extends RelationManager
                                     ->label(__('ui.staff'))
                                     ->searchable()
                                     ->preload()
-                                    ->options(function (callable $get, ?Model $record = null) {
-                                        $existingTcNumbers = $this->ownerRecord->staffs()
-                                            ->join('reports', 'staff.report_id', '=', 'reports.id')
-                                            ->when($record, function ($query) use ($record) {
-                                                return $query->where('staff.id', '!=', $record->id);
-                                            })
-                                            ->pluck('reports.tc_no')
-                                            ->toArray();
-
+                                    ->options(function (?Model $record = null) {
                                         $query = Report::query()
                                             ->where('status', ManagerStatusEnum::ACTIVE)
-                                            ->where('tc_no', '!=', $this->ownerRecord->tc_no)
-                                            ->where('is_staff', 0);
-
-                                        // Eğer düzenleme modundaysak, mevcut kaydın report_id'sine ait raporu da seçenekler arasında göster
-                                        if ($record && $record->report_id) {
-                                            $currentReport = Report::find($record->report_id);
-                                            if ($currentReport) {
-                                                $query->orWhere('id', $record->report_id);
-                                            }
-                                        }
-
-                                        return $query->whereNotIn('tc_no', $existingTcNumbers)
+                                            ->where('tc_no', '!=', $this->ownerRecord->user->tc_no)
+                                            ->where(function ($query) use ($record) {
+                                                $query->where('is_staff', 0);
+                                                if ($record) {
+                                                    $query->orWhere('id', $record->report_id);
+                                                }
+                                            })
                                             ->selectRaw('MIN(id) as id, full_name')
-                                            ->groupBy('tc_no', 'full_name')
-                                            ->pluck('full_name', 'id')
-                                            ->toArray();
+                                            ->groupBy('tc_no', 'full_name');
+
+                                        return $query->pluck('full_name', 'id')->toArray();
                                     })
+                                    ->required()
+                                    ->validationMessages([
+                                        'required' => __('ui.required',),
+                                    ]),
+//                                    ->options(function (callable $get, ?Model $record = null) {
+//                                        $existingTcNumbers = $this->ownerRecord->staffs()
+//                                            ->join('reports', (new \App\Models\Staff)->getTable() . '.report_id', '=', 'reports.id')
+//                                            //->join('reports', 'staff.report_id', '=', 'reports.id')
+//                                            ->when($record, function ($query) use ($record) {
+//                                                return $query->where('staff.id', '!=', $record->id);
+//                                            })
+//                                            ->pluck('reports.tc_no')
+//                                            ->toArray();
+//
+//                                        $query = Report::query()
+//                                            ->where('status', ManagerStatusEnum::ACTIVE)
+//                                            ->where('tc_no', '!=', $this->ownerRecord->tc_no)
+//                                            ->where('is_staff', 0);
+//
+//                                        // Eğer düzenleme modundaysak, mevcut kaydın report_id'sine ait raporu da seçenekler arasında göster
+//                                        if ($record && $record->report_id) {
+//                                            $currentReport = Report::find($record->report_id);
+//                                            if ($currentReport) {
+//                                                $query->orWhere('id', $record->report_id);
+//                                            }
+//                                        }
+//
+//                                        return $query->whereNotIn('tc_no', $existingTcNumbers)
+//                                            ->selectRaw('MIN(id) as id, full_name')
+//                                            ->groupBy('tc_no', 'full_name')
+//                                            ->pluck('full_name', 'id')
+//                                            ->toArray();
+//                                    })
                             ]),
                     ]),
             ]);
@@ -84,6 +104,7 @@ class StaffsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
+            ->recordTitleAttribute('id')
             ->defaultSort('updated_at', 'desc')
             ->modifyQueryUsing(fn (Builder $query) => $query->orderBy('created_at', 'desc'))
             ->paginated([5, 10, 25, 50])
@@ -174,7 +195,6 @@ class StaffsRelationManager extends RelationManager
                 //
             ]);
     }
-
     public function isReadOnly(): bool
     {
         return false;

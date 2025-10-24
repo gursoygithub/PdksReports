@@ -16,7 +16,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             CustomPermissionSeeder::class,
             InitSeeder::class,
-            UploadReports::class,
+            //UploadReports::class,
         ]);
     }
 }

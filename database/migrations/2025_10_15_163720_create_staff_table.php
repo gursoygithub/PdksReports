@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('staff', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->foreignId('manager_id')->constrained('managers')->onDelete('cascade');
             $table->foreignId('report_id')->constrained('reports')->onDelete('cascade');
 
             $table->boolean('is_mailable')->default(true);
@@ -26,7 +26,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
 
-            $table->unique(['user_id', 'report_id', 'deleted_at']);
+            $table->unique(['manager_id', 'report_id', 'deleted_at']);
         });
     }
 
@@ -35,6 +35,12 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('staff');
+        // drop foreign keys first
+        Schema::table('staffs', function (Blueprint $table) {
+            $table->dropForeign(['manager_id']);
+            $table->dropForeign(['report_id']);
+        });
+
+        Schema::dropIfExists('staffs');
     }
 };

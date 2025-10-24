@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\BooleanStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,7 +12,7 @@ class Staff extends Model
     use Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'user_id',
+        'manager_id',
         'report_id',
         'is_mailable',
         'created_by',
@@ -19,9 +20,13 @@ class Staff extends Model
         'deleted_by',
     ];
 
+    protected $casts = [
+        'is_mailable' => BooleanStatusEnum::class,
+    ];
+
     public function manager()
     {
-        return $this->belongsTo(User::class, 'user_id');
+        return $this->belongsTo(Manager::class);
     }
 
     public function report()

@@ -21,7 +21,7 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationIcon = 'heroicon-o-user';
 
     public static function getModelLabel(): string
     {
@@ -41,9 +41,9 @@ class UserResource extends Resource
     public static function getNavigationBadge(): ?string
     {
         if (auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_users')) {
-            return static::getModel()::count();
+            return static::getModel()::where('id', '>', 1)->count();
         } else {
-            return static::getModel()::where('created_by', auth()->id())->count();
+            return static::getModel()::where('created_by', auth()->id())->where('id', '>', 1)->count();
         }
     }
 
@@ -348,13 +348,17 @@ class UserResource extends Resource
                     ->label(__('ui.roles'))
                     ->badge()
                     ->sortable(),
-                Tables\Columns\TextColumn::make('staffs_count')
-                    ->label(__('ui.staffs_count'))
-                    ->counts('staffs')
+                Tables\Columns\TextColumn::make('is_manager')
+                    ->label(__('ui.is_manager'))
                     ->badge()
-                    ->color('info')
-                    //->alignCenter()
                     ->sortable(),
+//                Tables\Columns\TextColumn::make('staffs_count')
+//                    ->label(__('ui.staffs_count'))
+//                    ->counts('staffs')
+//                    ->badge()
+//                    ->color('info')
+//                    //->alignCenter()
+//                    ->sortable(),
                 Tables\Columns\TextColumn::make('status')
                     ->label(__('ui.status'))
                     ->badge()
@@ -421,7 +425,7 @@ class UserResource extends Resource
     public static function getRelations(): array
     {
         return [
-            RelationManagers\StaffsRelationManager::class,
+            //RelationManagers\StaffsRelationManager::class,
         ];
     }
 

@@ -20,89 +20,63 @@ class ListUsers extends ListRecords
         ];
     }
 
-    // Define tabs for filtering users based on their status
-//    public function getTabs(): array
-//    {
-//        $tabs = [];
-//
-//        $tabs['all'] = Tab::make(__('ui.all'))
-//            ->badge(User::count());
-//
-//        $tabs['active'] = Tab::make(__('ui.active'))
-//            ->badge(User::where('status', 1)->count())
-//            ->badgeIcon('heroicon-o-check-circle')
-//            ->badgeColor('success')
-//            ->modifyQueryUsing(function ($query) {
-//                return $query->where('status', 1);
-//            });
-//
-//        $tabs['inactive'] = Tab::make(__('ui.inactive'))
-//            ->badge(User::where('status', 0)->count())
-//            ->badgeIcon('heroicon-o-x-circle')
-//            ->badgeColor('danger')
-//            ->modifyQueryUsing(function ($query) {
-//                return $query->where('status', 0);
-//            });
-//
-//        return $tabs;
-//    }
-
     public function getTabs(): array
-{
-    $tabs = [];
-    $canViewAllUsers = auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_users');
+    {
+        $tabs = [];
+        $canViewAllUsers = auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_users');
 
-    // "All" tab
-    $query = User::query();
-    if (!$canViewAllUsers) {
-        $query->where('created_by', auth()->id());
+        // "All" tab
+        $allQuery = User::query()->where('id', '>', 1);
+        if (!$canViewAllUsers) {
+            $allQuery->where('created_by', auth()->id());
+        }
+
+        $tabs['all'] = Tab::make(__('ui.all'))
+            ->badge($allQuery->count())
+            ->modifyQueryUsing(function ($query) use ($canViewAllUsers) {
+                $query->where('id', '>', 1);
+                if (!$canViewAllUsers) {
+                    $query->where('created_by', auth()->id());
+                }
+                return $query;
+            });
+
+        // "Active" tab
+        $activeQuery = User::query()->where('status', ManagerStatusEnum::ACTIVE)->where('id', '>', 1);
+        if (!$canViewAllUsers) {
+            $activeQuery->where('created_by', auth()->id());
+        }
+
+        $tabs['active'] = Tab::make(__('ui.active'))
+            ->badge($activeQuery->count())
+            ->badgeIcon('heroicon-o-check-circle')
+            ->badgeColor('success')
+            ->modifyQueryUsing(function ($query) use ($canViewAllUsers) {
+                $query->where('status', ManagerStatusEnum::ACTIVE)->where('id', '>', 1);
+                if (!$canViewAllUsers) {
+                    $query->where('created_by', auth()->id());
+                }
+                return $query;
+            });
+
+        // "Inactive" tab
+        $inactiveQuery = User::query()->where('status', ManagerStatusEnum::INACTIVE)->where('id', '>', 1);
+        if (!$canViewAllUsers) {
+            $inactiveQuery->where('created_by', auth()->id());
+        }
+
+        $tabs['inactive'] = Tab::make(__('ui.inactive'))
+            ->badge($inactiveQuery->count())
+            ->badgeIcon('heroicon-o-x-circle')
+            ->badgeColor('danger')
+            ->modifyQueryUsing(function ($query) use ($canViewAllUsers) {
+                $query->where('status', ManagerStatusEnum::INACTIVE)->where('id', '>', 1);
+                if (!$canViewAllUsers) {
+                    $query->where('created_by', auth()->id());
+                }
+                return $query;
+            });
+
+        return $tabs;
     }
-
-    $tabs['all'] = Tab::make(__('ui.all'))
-        ->badge($query->count())
-        ->modifyQueryUsing(function ($query) use ($canViewAllUsers) {
-            if (!$canViewAllUsers) {
-                return $query->where('created_by', auth()->id());
-            }
-            return $query;
-        });
-
-    // "Active" tab
-    $activeQuery = User::query()->where('status', ManagerStatusEnum::ACTIVE);
-    if (!$canViewAllUsers) {
-        $activeQuery->where('created_by', auth()->id());
-    }
-
-    $tabs['active'] = Tab::make(__('ui.active'))
-        ->badge($activeQuery->count())
-        ->badgeIcon('heroicon-o-check-circle')
-        ->badgeColor('success')
-        ->modifyQueryUsing(function ($query) use ($canViewAllUsers) {
-            $query->where('status', ManagerStatusEnum::ACTIVE);
-            if (!$canViewAllUsers) {
-                $query->where('created_by', auth()->id());
-            }
-            return $query;
-        });
-
-    // "Inactive" tab
-    $inactiveQuery = User::query()->where('status', ManagerStatusEnum::INACTIVE);
-    if (!$canViewAllUsers) {
-        $inactiveQuery->where('created_by', auth()->id());
-    }
-
-    $tabs['inactive'] = Tab::make(__('ui.inactive'))
-        ->badge($inactiveQuery->count())
-        ->badgeIcon('heroicon-o-x-circle')
-        ->badgeColor('danger')
-        ->modifyQueryUsing(function ($query) use ($canViewAllUsers) {
-            $query->where('status', ManagerStatusEnum::INACTIVE);
-            if (!$canViewAllUsers) {
-                $query->where('created_by', auth()->id());
-            }
-            return $query;
-        });
-
-    return $tabs;
-}
 }

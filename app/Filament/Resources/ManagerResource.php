@@ -41,14 +41,18 @@ class ManagerResource extends Resource
         return __('ui.report_management');
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        if (auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_managers')) {
+            return static::getModel()::count();
+        } else {
+            return static::getModel()::where('created_by', auth()->id())->count();
+        }
+    }
+
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()->where(function ($query) {
-
-//            $query
-//                ->where('is_manager', true)
-//                ->where('id', '!=', Auth::id())
-//                ->where('id', '>', 1); // exclude super admin user with ID 1
 
             if (auth()->user()?->hasRole('super_admin') || auth()->user()?->can('view_all_managers')
             ) {
@@ -149,10 +153,7 @@ class ManagerResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 Tables\Columns\TextColumn::make('created_at')
                     ->label(__('ui.created_at'))
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->dateTime(),
                 Tables\Columns\TextColumn::make('updatedBy.name')
                     ->label(__('ui.updated_by'))
                     ->searchable()
@@ -173,12 +174,36 @@ class ManagerResource extends Resource
                     [
                         Tables\Actions\ViewAction::make(),
                         Tables\Actions\EditAction::make(),
-                        Tables\Actions\DeleteAction::make(),
-                            /*
+                        Tables\Actions\DeleteAction::make()
+                            ->visible(fn ($record) => $record->staffs()->count() === 0)
                             ->requiresConfirmation()
                             ->action(function ($record) {
                                 DB::transaction(function () use ($record) {
                                     try {
+                                        //set is_manager to false for the related user
+                                        $user = $record->user;
+                                        if ($user) {
+                                            $user->is_manager = false;
+                                            $user->save();
+                                        }
+
+                                        // Set is_staff to false for all related staffs' reports
+                                        foreach ($record->staffs as $staff) {
+                                            $report = Report::find($staff->report_id);
+                                            if ($report) {
+                                                $report->is_staff = false;
+                                                $report->save();
+                                            }
+                                        }
+
+                                        // Soft delete related staffs
+                                        foreach ($record->staffs as $staff) {
+                                            $staff->deleted_by = Auth::id();
+                                            $staff->deleted_at = now();
+                                            $staff->save();
+                                        }
+
+                                        // Soft delete the manager record
                                         $record->deleted_by = Auth::id();
                                         $record->deleted_at = now();
                                         $record->save();
@@ -195,7 +220,6 @@ class ManagerResource extends Resource
                                     }
                                 });
                             })
-                        */
                     ]
                 ),
             ])
@@ -207,7 +231,7 @@ class ManagerResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\StaffsRelationManager::class,
         ];
     }
 

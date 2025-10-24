@@ -342,4 +342,8 @@ return [
     'update_staff' => 'Personeli Güncelle',
     'delete_staff' => 'Personeli Sil',
     'staffs_count' => 'Personel Sayısı',
+    'is_manager' => 'Amir Mi',
+    'staff_under_manager' => 'Amire Bağlı Personel',
+    'staffs_under_manager' => 'Amire Bağlı Personeller',
+    'is_mailable' => 'E-posta Gönderilebilir',
 ];

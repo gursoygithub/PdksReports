@@ -29,6 +29,11 @@ class Manager extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function staffs()
+    {
+        return $this->hasMany(Staff::class);
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');

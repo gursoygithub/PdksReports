@@ -3,6 +3,7 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\BooleanStatusEnum;
 use App\Enums\ManagerStatusEnum;
 use App\Enums\UserTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -61,25 +62,20 @@ class User extends Authenticatable implements FilamentUser
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'status' => ManagerStatusEnum::class,
-            'is_manager' => UserTypeEnum::class,
+            'is_manager' => BooleanStatusEnum::class,
         ];
     }
 
     // Relation with managers
     public function managers()
     {
-        return $this->hasMany(Manager::class, 'user_id');
+        return $this->hasMany(Manager::class);
     }
 
     // Relation with reports
     public function report()
     {
         return $this->hasOne(Report::class, 'tc_no', 'tc_no');
-    }
-
-    public function staffs()
-    {
-        return $this->hasMany(Staff::class, 'user_id');
     }
 
     public function canAccessPanel(Panel $panel): bool
