@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use function PHPUnit\Framework\callback;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,6 +13,17 @@ return Application::configure(basePath: dirname(__DIR__))
     )
     ->withMiddleware(function (Middleware $middleware) {
         //
+    })
+    ->withSchedule(callback: function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
+        $schedule->command('cu-daily-report')
+            ->everyFiveMinutes()
+            ->timezone(timezone: config('app.timezone', 'UTC'))
+            ->onSuccess(callback: function (): void {
+                info(message: 'Günlük rapor komutu başarıyla tamamlandı.');
+            })
+            ->onFailure(callback: function ():void {
+                info(message: 'Günlük rapor komutu başarısız oldu.');
+            });
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
