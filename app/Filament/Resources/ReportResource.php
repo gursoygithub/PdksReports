@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Filament\Resources\ReportResource\Pages;
 use App\Filament\Resources\ReportResource\RelationManagers;
 use App\Models\Report;
+use App\Models\Staff;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
@@ -12,6 +13,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Support\Facades\Auth;
 
 class ReportResource extends Resource
 {
@@ -32,6 +34,28 @@ class ReportResource extends Resource
     public static function getNavigationGroup(): ?string
     {
         return __('ui.report_management');
+    }
+
+    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $user = auth()->user();
+
+        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
+            return parent::getEloquentQuery();
+        }
+
+        // Get staff IDs by their manager's user ID
+        $staffIds = Staff::whereIn('manager_id', function ($query) use ($user) {
+            $query->select('id')
+                ->from('managers')
+                ->where('user_id', $user->id);
+        })->pluck('id')->toArray();
+
+        return parent::getEloquentQuery()->whereIn('id', function ($query) use ($staffIds) {
+            $query->select('report_id')
+                ->from('staff')
+                ->whereIn('id', $staffIds);
+        });
     }
 
     public static function form(Form $form): Form
@@ -88,6 +112,15 @@ class ReportResource extends Resource
                     ->color('success'),
             ])
             ->filters([
+                Tables\Filters\SelectFilter::make('department_name')
+                    ->label(__('ui.department'))
+                    ->preload()
+                    ->searchable()
+                    ->options(fn () => Report::query()
+                        ->distinct()
+                        ->pluck('department_name', 'department_name')
+                        ->toArray()
+                    ),
                 Tables\Filters\Filter::make('today')
                     ->label(__('ui.today'))
                     ->query(fn (Builder $query): Builder => $query->whereDate('date', today()))

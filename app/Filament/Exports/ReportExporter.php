@@ -11,6 +11,28 @@ class ReportExporter extends Exporter
 {
     protected static ?string $model = Report::class;
 
+    public static function getQuery(): \Illuminate\Database\Eloquent\Builder
+    {
+        $user = auth()->user();
+
+        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
+            return Report::query();
+        }
+
+        // Sadece kendi personellerini görebilen kullanıcılar için:
+        $staffIds = \App\Models\Staff::whereIn('manager_id', function ($query) use ($user) {
+            $query->select('id')
+                ->from('managers')
+                ->where('user_id', $user->id);
+        })->pluck('id')->toArray();
+
+        return Report::whereIn('id', function ($query) use ($staffIds) {
+            $query->select('report_id')
+                ->from('staff')
+                ->whereIn('id', $staffIds);
+        });
+    }
+
     public static function getColumns(): array
     {
         $isSuperAdmin = auth()->user()->hasRole('super_admin');

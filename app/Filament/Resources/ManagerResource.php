@@ -134,13 +134,13 @@ class ManagerResource extends Resource
                     ->label(__('ui.position'))
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-//                Tables\Columns\TextColumn::make('staffs_count')
-//                    ->label(__('ui.staffs_count'))
-//                    ->counts('staffs')
-//                    ->badge()
-//                    ->color('info')
-//                    //->alignCenter()
-//                    ->sortable(),
+                Tables\Columns\TextColumn::make('staffs_count')
+                    ->label(__('ui.staffs_count'))
+                    ->counts('staffs')
+                    ->badge()
+                    ->color('info')
+                    //->alignCenter()
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('user.status')
                     ->label(__('ui.status'))
                     ->badge()

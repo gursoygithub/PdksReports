@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Filament\Resources\ManagerResource\RelationManagers\StaffsRelationManager;
 use App\Filament\Resources\StaffResource\Pages;
 use App\Filament\Resources\StaffResource\RelationManagers;
 use App\Models\Staff;
@@ -148,11 +149,11 @@ class StaffResource extends Resource
                 //
             ])
             ->actions([
-//                Tables\Actions\ActionGroup::make([
-//                    Tables\Actions\ViewAction::make(),
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\ViewAction::make(),
 //                    Tables\Actions\EditAction::make(),
 //                    Tables\Actions\DeleteAction::make(),
-//                ])
+                ])
             ])
             ->bulkActions([
                 //
@@ -162,7 +163,7 @@ class StaffResource extends Resource
     public static function getRelations(): array
     {
         return [
-            //
+            RelationManagers\ReportsRelationManager::class,
         ];
     }
 
@@ -172,6 +173,7 @@ class StaffResource extends Resource
             'index' => Pages\ListStaff::route('/'),
             'create' => Pages\CreateStaff::route('/create'),
             'edit' => Pages\EditStaff::route('/{record}/edit'),
+            'view' => Pages\ViewStaff::route('/{record}'),
         ];
     }
 

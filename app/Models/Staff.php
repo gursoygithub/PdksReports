@@ -34,6 +34,11 @@ class Staff extends Model
         return $this->belongsTo(Report::class);
     }
 
+    public function reports()
+    {
+        return $this->hasMany(Report::class, 'id', 'report_id');
+    }
+
     public function createdBy()
     {
         return $this->belongsTo(User::class, 'created_by');
