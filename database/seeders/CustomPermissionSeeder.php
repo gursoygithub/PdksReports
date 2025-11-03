@@ -12,12 +12,13 @@ class CustomPermissionSeeder extends Seeder
     public function run(): void
     {
         $permissionName = [
-            'view_all_records',
+            'view_all_reports',
             'export_reports',
             'view_all_users',
             'view_tc_no',
             'view_all_managers',
             'view_all_staff',
+            'export_staff',
         ];
 
         foreach ($permissionName as $name) {

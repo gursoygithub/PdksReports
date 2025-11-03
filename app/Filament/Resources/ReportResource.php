@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\ManagerStatusEnum;
 use App\Filament\Resources\ReportResource\Pages;
 use App\Filament\Resources\ReportResource\RelationManagers;
 use App\Models\Report;
@@ -34,6 +35,29 @@ class ReportResource extends Resource
     public static function getNavigationGroup(): ?string
     {
         return __('ui.report_management');
+    }
+
+    public static function getNavigationBadge(): ?string
+    {
+        $user = auth()->user();
+
+        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
+            return static::getModel()::count();
+            //return static::getModel()::where('status', ManagerStatusEnum::ACTIVE)->count();
+        }
+
+        // Get staff IDs by their manager's user ID
+        $staffIds = Staff::whereIn('manager_id', function ($query) use ($user) {
+            $query->select('id')
+                ->from('managers')
+                ->where('user_id', $user->id);
+        })->pluck('id')->toArray();
+
+        return static::getModel()::whereIn('id', function ($query) use ($staffIds) {
+            $query->select('report_id')
+                ->from('staff')
+                ->whereIn('id', $staffIds);
+        })->count();
     }
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
@@ -110,6 +134,9 @@ class ReportResource extends Resource
                     ->label(__('ui.working_time'))
                     ->badge()
                     ->color('success'),
+                Tables\Columns\TextColumn::make('status')
+                    ->label(__('ui.status'))
+                    ->badge(),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('department_name')

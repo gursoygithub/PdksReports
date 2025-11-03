@@ -148,6 +148,14 @@ class StaffResource extends Resource
             ->filters([
                 //
             ])
+            ->headerActions([
+                Tables\Actions\ExportAction::make()
+                    ->exporter(\App\Filament\Exports\StaffExporter::class)
+                    ->label(__('ui.export'))
+                    ->modalHeading(__('ui.export_staff_reports'))
+                    ->icon('heroicon-o-arrow-down-tray')
+                    ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('export_staff')),
+            ])
             ->actions([
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\ViewAction::make(),

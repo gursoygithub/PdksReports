@@ -17,6 +17,7 @@ class ReportExporter extends Exporter
 
         if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
             return Report::query();
+            //return Report::where('status', \App\Enums\ManagerStatusEnum::ACTIVE);
         }
 
         // Sadece kendi personellerini görebilen kullanıcılar için:
@@ -66,6 +67,13 @@ class ReportExporter extends Exporter
                 ->formatStateUsing(fn ($state) => $state ? date('H:i:s', strtotime($state)) : ''),
             ExportColumn::make('working_time')
                 ->label(__('ui.working_time')),
+            ExportColumn::make('status')
+                ->label(__('ui.status'))
+                ->formatStateUsing(fn ($state): ?string =>
+                $state instanceof \App\Enums\ManagerStatusEnum
+                    ? $state->getLabel()
+                    : (string) $state
+                ),
         ]);
 
         return $columns;

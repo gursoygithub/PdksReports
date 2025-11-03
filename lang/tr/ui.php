@@ -346,5 +346,6 @@ return [
     'staff_under_manager' => 'Amire Bağlı Personel',
     'staffs_under_manager' => 'Amire Bağlı Personeller',
     'is_mailable' => 'E-posta Gönderilebilir',
-
+    'checked' => 'Okutanlar',
+    'not_checked' => 'Okutmayanlar',
 ];
