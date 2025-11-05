@@ -15,7 +15,7 @@ return Application::configure(basePath: dirname(__DIR__))
         //
     })
     ->withSchedule(callback: function (\Illuminate\Console\Scheduling\Schedule $schedule): void {
-        $schedule->command('cu-daily-report')
+        $schedule->command('report:daily')
             ->everyFiveMinutes()
             ->timezone(timezone: config('app.timezone', 'UTC'))
             ->onSuccess(callback: function (): void {
