@@ -78,7 +78,7 @@ class ReportService
      */
     public function reportsDailyService(): int
     {
-        $apiUrl = 'http://10.10.50.6:8080/api/zk/cardreadings';
+        $apiUrl = 'http://10.10.50.6:8080/api/zk/cardreadingsdaily';
         $batchSize = 1000;
         $buffer = [];
         $totalProcessed = 0;
@@ -124,6 +124,59 @@ class ReportService
             throw $e;
         }
     }
+
+    /**
+     * SON 90 GÜNLÜK rapor çekimi.
+     */
+    public function reportsLast90DaysService(): int
+    {
+        $apiUrl = 'http://10.10.50.6:8080/api/zk/cardreadingsninedays';
+        $batchSize = 1000;
+        $buffer = [];
+        $totalProcessed = 0;
+
+        try {
+            Log::info("90 günlük rapor çekiliyor: {$apiUrl}");
+
+            $response = Http::timeout(120)->get($apiUrl);
+
+            if ($response->failed()) {
+                Log::error('API hatası', [
+                    'url' => $apiUrl,
+                    'status' => $response->status(),
+                    'body' => $response->body(),
+                ]);
+                throw new \Exception("API isteği başarısız oldu. HTTP Kod: " . $response->status());
+            }
+
+            $dataList = $response->json();
+
+            foreach ($dataList as $data) {
+                $buffer[] = $this->formatData($data);
+
+                if (count($buffer) >= $batchSize) {
+                    $this->upsertReports($buffer);
+                    $totalProcessed += count($buffer);
+                    $buffer = [];
+                }
+            }
+
+            if (!empty($buffer)) {
+                $this->upsertReports($buffer);
+                $totalProcessed += count($buffer);
+            }
+
+            Log::info("90 günlük rapor tamamlandı. Toplam kayıt: {$totalProcessed}");
+            return $totalProcessed;
+
+        } catch (\Throwable $e) {
+            Log::error('Report 90 günlük hatası: ' . $e->getMessage(), [
+                'exception' => $e
+            ]);
+            throw $e;
+        }
+    }
+
 
     /**
      * Tek kayıt formatlama metodu — hem stream hem daily için ortak.
