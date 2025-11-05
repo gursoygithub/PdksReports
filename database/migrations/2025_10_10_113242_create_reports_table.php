@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('department_name')->nullable();
             $table->string('position_name')->nullable();
             $table->dateTime('date')->nullable();
+            $table->string('day')->nullable();
             $table->dateTime('first_reading')->nullable();
             $table->dateTime('last_reading')->nullable();
             $table->time('working_time')->nullable();

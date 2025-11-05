@@ -24,7 +24,7 @@ class UploadReports extends Seeder
 
             $this->command->info('Personel giriş-çıkış verileri yükleniyor...');
 
-            $processedCount = $service->reportsService();
+            $processedCount = $service->reportsStreamService();
 
             $this->command->info("Toplam {$processedCount} kayıt işlendi.");
         } catch (\Exception $e) {

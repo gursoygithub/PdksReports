@@ -13,6 +13,7 @@ class Report extends Model
         'department_name',
         'position_name',
         'date',
+        'day',
         'first_reading',
         'last_reading',
         'working_time',
