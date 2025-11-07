@@ -84,7 +84,7 @@ class ReportService
         $totalProcessed = 0;
 
         try {
-            Log::info("Daily report çekiliyor: {$apiUrl}");
+            Log::info("Günlük rapor çekiliyor: {$apiUrl}");
 
             $response = Http::timeout(60)->get($apiUrl);
 

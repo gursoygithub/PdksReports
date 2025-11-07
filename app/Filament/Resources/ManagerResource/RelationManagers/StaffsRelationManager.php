@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\ManagerResource\RelationManagers;
 
+use App\Enums\BooleanStatusEnum;
 use App\Enums\ManagerStatusEnum;
+use App\Models\Employee;
 use App\Models\Report;
 use Filament\Forms;
 use Filament\Forms\Components\Fieldset;
@@ -44,58 +46,37 @@ class StaffsRelationManager extends RelationManager
                         Fieldset::make(__('ui.staff_information'))
                             ->columns(1)
                             ->schema([
-                                Forms\Components\Select::make('report_id')
+                                Forms\Components\Select::make('employee_id')
                                     ->label(__('ui.staff'))
                                     ->searchable()
                                     ->preload()
-                                    ->options(function (?Model $record = null) {
-                                        $query = Report::query()
-                                            ->where('status', ManagerStatusEnum::ACTIVE)
-                                            ->where('tc_no', '!=', $this->ownerRecord->user->tc_no)
-                                            ->where(function ($query) use ($record) {
-                                                $query->where('is_staff', 0);
-                                                if ($record) {
-                                                    $query->orWhere('id', $record->report_id);
-                                                }
-                                            })
-                                            ->selectRaw('MIN(id) as id, full_name')
-                                            ->groupBy('tc_no', 'full_name');
+                                    ->options(function (callable $get) {
+                                        $manager = $this->ownerRecord;
 
-                                        return $query->pluck('full_name', 'id')->toArray();
+                                        if ($manager && ! $manager->relationLoaded('user')) {
+                                            $manager->load('user');
+                                        }
+
+                                        $managerEmployeeId = optional($manager->user)->employee_id;
+
+                                        // Şu anda formda seçili olan çalışan id'sini al
+                                        $currentEmployeeId = $get('employee_id');
+
+                                        return \App\Models\Employee::query()
+                                            ->where('status', \App\Enums\ManagerStatusEnum::ACTIVE)
+                                            // Eğer yeni kayıt ekleniyorsa sadece staff olmayanlar
+                                            // Ama update yapılıyorsa mevcut seçili personel dahil edilmeli
+                                            ->when(!$currentEmployeeId, fn($q) => $q->where('is_staff', \App\Enums\BooleanStatusEnum::NO))
+                                            ->when($managerEmployeeId, fn($q) => $q->where('id', '!=', $managerEmployeeId))
+                                            ->orderBy('first_name')
+                                            ->get()
+                                            ->mapWithKeys(fn($employee) => [$employee->id => $employee->full_name])
+                                            ->toArray();
                                     })
                                     ->required()
                                     ->validationMessages([
                                         'required' => __('ui.required',),
                                     ]),
-//                                    ->options(function (callable $get, ?Model $record = null) {
-//                                        $existingTcNumbers = $this->ownerRecord->staffs()
-//                                            ->join('reports', (new \App\Models\Staff)->getTable() . '.report_id', '=', 'reports.id')
-//                                            //->join('reports', 'staff.report_id', '=', 'reports.id')
-//                                            ->when($record, function ($query) use ($record) {
-//                                                return $query->where('staff.id', '!=', $record->id);
-//                                            })
-//                                            ->pluck('reports.tc_no')
-//                                            ->toArray();
-//
-//                                        $query = Report::query()
-//                                            ->where('status', ManagerStatusEnum::ACTIVE)
-//                                            ->where('tc_no', '!=', $this->ownerRecord->tc_no)
-//                                            ->where('is_staff', 0);
-//
-//                                        // Eğer düzenleme modundaysak, mevcut kaydın report_id'sine ait raporu da seçenekler arasında göster
-//                                        if ($record && $record->report_id) {
-//                                            $currentReport = Report::find($record->report_id);
-//                                            if ($currentReport) {
-//                                                $query->orWhere('id', $record->report_id);
-//                                            }
-//                                        }
-//
-//                                        return $query->whereNotIn('tc_no', $existingTcNumbers)
-//                                            ->selectRaw('MIN(id) as id, full_name')
-//                                            ->groupBy('tc_no', 'full_name')
-//                                            ->pluck('full_name', 'id')
-//                                            ->toArray();
-//                                    })
                             ]),
                     ]),
             ]);
@@ -109,11 +90,49 @@ class StaffsRelationManager extends RelationManager
             ->modifyQueryUsing(fn (Builder $query) => $query->orderBy('created_at', 'desc'))
             ->paginated([5, 10, 25, 50])
             ->columns([
-                Tables\Columns\TextColumn::make('report.full_name')
+                Tables\Columns\TextColumn::make('employee.tc_no')
+                    ->visible(fn ($record) => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_tc_no'))
+                    ->label(__('ui.tc_no'))
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('employee.full_name')
                     ->label(__('ui.staff'))
                     ->badge()
                     ->color('primary')
-                    ->searchable(),
+                    ->searchable(query: function (Builder $query, string $search): Builder {
+                        return $query->whereHas('employee', function (Builder $query) use ($search) {
+                            $query->where('first_name', 'like', "%{$search}%")
+                                ->orWhere('last_name', 'like', "%{$search}%");
+                        });
+                    }),
+                Tables\Columns\TextColumn::make('employee.latestReport.department_name')
+                    ->label(__('ui.department'))
+                    ->searchable()
+                    ->placeholder('-'),
+                Tables\Columns\TextColumn::make('employee.latestReport.position_name')
+                    ->label(__('ui.position'))
+                    ->searchable()
+                    ->placeholder('-'),
+                Tables\Columns\TextColumn::make('createdBy.name')
+                    ->visible(fn () => auth()->user()->hasRole('super_admin'))
+                    ->label(__('ui.created_by'))
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label(__('ui.created_at'))
+                    ->dateTime(),
+                Tables\Columns\TextColumn::make('updatedBy.name')
+                    ->label(__('ui.updated_by'))
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('updated_at')
+                    ->label(__('ui.updated_at'))
+                    ->getStateUsing(fn ($record) => $record->updated_by ? $record->updated_at : null)
+                    ->dateTime()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
@@ -124,11 +143,11 @@ class StaffsRelationManager extends RelationManager
                         $data['created_by'] = auth()->id();
                         $data['manager_id'] = $this->ownerRecord->id;
 
-                        // Update the related report to set is_staff to true
-                        $report = Report::find($data['report_id']);
-                        if ($report) {
-                            $report->is_staff = 1;
-                            $report->save();
+                        // Update the related employee to set is_staff to true
+                        $employee = Employee::find($data['employee_id']);
+                        if ($employee) {
+                            $employee->is_staff = BooleanStatusEnum::YES;
+                            $employee->save();
                         }
 
                         return $data;
@@ -140,22 +159,23 @@ class StaffsRelationManager extends RelationManager
 
                         $data['updated_by'] = auth()->id();
 
-                        // If report_id is changed, update the is_staff flags accordingly
-                        if (isset($data['report_id']) && $data['report_id'] != $record->report_id) {
-                            // Set old report's is_staff to false
-                            $oldReport = Report::find($record->report_id);
-                            if ($oldReport) {
-                                $oldReport->is_staff = 0;
-                                $oldReport->save();
+                        // If employee_id is changed, update the is_staff flags accordingly
+                        if (isset($data['employee_id']) && $data['employee_id'] != $record->employee_id) {
+                            // Set old employee's is_staff to false
+                            $oldEmployee = Employee::find($record->employee_id);
+                            if ($oldEmployee) {
+                                $oldEmployee->is_staff = BooleanStatusEnum::NO;
+                                $oldEmployee->save();
                             }
 
-                            // Set new report's is_staff to true
-                            $newReport = Report::find($data['report_id']);
-                            if ($newReport) {
-                                $newReport->is_staff = 1;
-                                $newReport->save();
+                            // Set new employee's is_staff to true
+                            $newEmployee = Employee::find($data['employee_id']);
+                            if ($newEmployee) {
+                                $newEmployee->is_staff = BooleanStatusEnum::YES;
+                                $newEmployee->save();
                             }
                         }
+
                         return $data;
                     }),
                 Tables\Actions\DeleteAction::make()
@@ -164,11 +184,11 @@ class StaffsRelationManager extends RelationManager
                     ->action(function (Model $record) {
                         DB::transaction(function () use ($record) {
                             try {
-                                // Set the related report's is_staff to false
-                                $report = Report::find($record->report_id);
-                                if ($report) {
-                                    $report->is_staff = 0;
-                                    $report->save();
+                                // Set the related employee's is_staff to false
+                                $employee = Employee::find($record->employee_id);
+                                if ($employee) {
+                                    $employee->is_staff = BooleanStatusEnum::NO;
+                                    $employee->save();
                                 }
 
                                 // Soft delete the staff record

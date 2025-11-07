@@ -27,7 +27,7 @@ class User extends Authenticatable implements FilamentUser
      * @var list<string>
      */
     protected $fillable = [
-        'tc_no',
+        'employee_id',
         'name',
         'email',
         'phone',
@@ -72,10 +72,10 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(Manager::class);
     }
 
-    // Relation with reports
-    public function report()
+    // Relation with employee
+    public function employee()
     {
-        return $this->hasOne(Report::class, 'tc_no', 'tc_no');
+        return $this->belongsTo(Employee::class, 'employee_id', 'id');
     }
 
     public function canAccessPanel(Panel $panel): bool

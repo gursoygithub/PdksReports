@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('users', function (Blueprint $table) {
             $table->id();
-            $table->string('tc_no', 11); // For matching with tc_no in reports table
+            $table->bigInteger('employee_id');
             $table->string('name');
             $table->string('email');
             $table->string('phone')->nullable();

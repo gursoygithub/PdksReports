@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
+use App\Models\Employee;
 use App\Models\Report;
 use Filament\Actions;
 use Filament\Resources\Pages\EditRecord;
@@ -35,31 +36,18 @@ class EditUser extends EditRecord
     {
         $data['updated_by'] = auth()->user()->id;
 
-        try {
-            $staff = Report::query()->findOrFail($data['name']);
+        // employee_id değiştiyse güncelle
+        if (isset($data['employee_id']) && $data['employee_id'] !== $this->record->employee_id) {
+            $data['tc_no'] = $data['employee_id'];
 
-            $data['tc_no'] = $staff->tc_no;
-            $data['name'] = $staff->full_name;
-            $data['status'] = \App\Enums\ManagerStatusEnum::ACTIVE;
-        } catch (\Exception $e) {
-            session()->flash('error', 'Kullanıcı bulunamadı.');
+            $employee = Employee::find($data['employee_id']);
+
+            if ($employee) {
+                $data['name'] = $employee->full_name;
+            } else {
+                session()->flash('error', 'Çalışan bulunamadı.');
+            }
         }
-
-
-//        if (isset($data['project_id']) && $data['project_id'] !== $this->record->project_id) {
-//            $project = \Illuminate\Support\Facades\DB::connection('sqlsrv')
-//                ->table('dbo.TumProjeler')
-//                ->where('KOD', $data['project_id'])
-//                ->first();
-//
-//            if ($project) {
-//                $data['project_id'] = $project->KOD;
-//                $data['project_name'] = $project->AD;
-//            } else {
-//                // uyarı ver
-//                session()->flash('error', 'Proje bulunamadı.');
-//            }
-//        }
 
         return $data;
     }

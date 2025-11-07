@@ -19,7 +19,7 @@ class InitSeeder extends Seeder
         $checkUserTable = User::count();
         if ($checkUserTable == 0) {
             User::create([
-                'tc_no' => '00000000000',
+                'employee_id' => 0,
                 'name' => 'Admin',
                 'email' => 'sa@app.com',
                 'password' => 'password',

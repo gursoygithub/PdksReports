@@ -20,32 +20,26 @@ class DatabaseSeeder extends Seeder
             InitSeeder::class,
         ]);
 
-        // 1️⃣ Son 90 günlük raporları çek
+        // Son 90 günlük raporları çek
         try {
             $this->command->info('⏳ Son 90 günlük rapor çekimi başlatılıyor...');
             Artisan::call('reports:90days');
             $this->command->info(Artisan::output());
             $this->command->info('✅ Son 90 günlük rapor çekimi tamamlandı.');
         } catch (\Throwable $e) {
-            $this->command->error('❌ Rapor çekimi sırasında hata oluştu: ' . $e->getMessage());
-            Log::error('Seeder rapor hatası', ['exception' => $e]);
+            $this->command->error('❌ 90 günlük rapor çekiminde hata: ' . $e->getMessage());
+            Log::error('90 günlük rapor hatası', ['exception' => $e]);
         }
 
-        // 2️⃣ Stream ve Daily komutlarını çağır
-//        try {
-//            $this->command->info('📡 Rapor yükleme başlatılıyor (stream)...');
-//            Artisan::call('report:stream');
-//            $this->command->info(Artisan::output());
-//
-//            $this->command->info('📅 Günlük rapor yükleme başlatılıyor...');
-//            Artisan::call('report:daily');
-//            $this->command->info(Artisan::output());
-//
-//            $this->command->info('✅ Stream ve daily rapor yüklemeleri tamamlandı.');
-//
-//        } catch (\Throwable $e) {
-//            $this->command->error('❌ Rapor yükleme sırasında hata oluştu: ' . $e->getMessage());
-//            Log::error('Seeder rapor hatası', ['exception' => $e]);
-//        }
+        // Personel verileri çekimi
+        try {
+            $this->command->info('⏳ Personel verileri çekimi başlatılıyor...');
+            Artisan::call('employee:daily');
+            $this->command->info(Artisan::output());
+            $this->command->info('✅ Personel verileri çekimi tamamlandı.');
+        } catch (\Throwable $e) {
+            $this->command->error('❌ Personel verileri çekiminde hata: ' . $e->getMessage());
+            Log::error('Personel verileri çekim hatası', ['exception' => $e]);
+        }
     }
 }

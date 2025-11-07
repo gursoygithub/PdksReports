@@ -21,6 +21,8 @@ class StaffResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-users';
 
+    //protected static bool $shouldRegisterNavigation = false;
+
     public static function getModelLabel(): string
     {
         return __('ui.staff');

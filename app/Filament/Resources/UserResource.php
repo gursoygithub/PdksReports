@@ -7,6 +7,7 @@ use App\Enums\ManagerStatusEnum;
 use App\Enums\UserStatusEnum;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
+use App\Models\Employee;
 use App\Models\Report;
 use App\Models\User;
 use Filament\Forms;
@@ -74,16 +75,16 @@ class UserResource extends Resource
                         Fieldset::make(__('ui.user_info'))
                             ->columns(2)
                             ->schema([
-                                Forms\Components\Select::make('name')
+                                Forms\Components\Select::make('employee_id')
                                     ->label(__('ui.user'))
                                     ->searchable()
                                     ->preload()
                                     ->options(
-                                        Report::query()
+                                        Employee::query()
                                             ->where('status', ManagerStatusEnum::ACTIVE)
-                                            ->selectRaw('MIN(id) as id, full_name')
-                                            ->groupBy('tc_no', 'full_name')
-                                            ->pluck('full_name', 'id')
+                                            ->orderBy('first_name')
+                                            ->get()
+                                            ->mapWithKeys(fn($employee) => [$employee->id => $employee->full_name])
                                             ->toArray()
                                     )
                                     ->required()
@@ -195,138 +196,6 @@ class UserResource extends Resource
                             ])->columns(2),
                     ]),
             ]);
-
-            /*
-            ->schema([
-                Forms\Components\Fieldset::make(__('ui.user_info'))
-                    ->schema([
-                        Forms\Components\TextInput::make('name')
-                            ->label(__('ui.full_name'))
-                            ->placeholder(__('ui.full_name'))
-                            ->required()
-                            ->validationMessages([
-                                'required' => __('ui.required'),
-                            ])
-                            ->maxLength(255),
-                        Forms\Components\TextInput::make('email')
-                            ->label(__('ui.email'))
-                            ->placeholder(__('ui.email'))
-                            ->email()
-                            ->maxLength(50)
-                            ->rule('email')
-                            ->validationMessages([
-                                'email' => __('ui.email_invalid'),
-                                'required' => __('ui.required'),
-                            ])
-                            ->required(),
-                        Forms\Components\TextInput::make('phone')
-                            ->label(__('ui.phone'))
-                            ->placeholder(__('ui.phone_placeholder'))
-                            ->numeric()
-                            ->minLength(10)
-                            ->maxLength(10)
-                            ->rule('digits:10')
-                            ->mask('99999999999')
-                            ->validationMessages([
-                                'digits' => __('ui.phone_digits'),
-                                'numeric' => __('ui.phone_numeric'),
-                                'required' => __('ui.required'),
-                                'min_digits' => __('ui.phone_min_digits'),
-                                'max_digits' => __('ui.phone_max_digits'),
-                            ]),
-
-                        Forms\Components\Select::make('project_id')
-                            ->hidden()
-                            ->label(__('ui.building_site'))
-                            ->options(function () {
-                                return DB::connection('sqlsrv')
-                                    ->table('dbo.personnel_employee')
-                                    //->select('id', DB::raw("first_name + ' ' + last_name as full_name"))
-                                    ->pluck('first_name', 'id')
-                                    ->toArray();
-                            })
-                            ->preload()
-                            ->searchable()
-                            ->required()
-                            ->validationMessages([
-                                'required' => __('ui.required'),
-                            ])
-                            ->columnSpanFull(),
-                        Forms\Components\Fieldset::make(__('ui.user_roles_and_status'))
-                            ->visible(fn ($record) => $record?->id !== auth()->id())
-                            ->schema([
-                                Forms\Components\Select::make('roles')
-                                    ->label(__('ui.roles'))
-                                    ->relationship('roles', 'name')
-                                    ->multiple()
-                                    ->preload()
-                                    ->searchable()
-                                    ->validationMessages([
-                                        'required' => __('ui.required'),
-                                    ])
-                                    ->required(),
-                                Forms\Components\Select::make('status')
-                                    ->hiddenOn('create')
-                                    ->label(__('ui.status'))
-                                    ->options(ManagerStatusEnum::class)
-                                    ->required()
-                                    ->default(1),
-                            ])->columns(2),
-                        Forms\Components\Fieldset::make(__('ui.password'))
-                            ->hiddenOn(['edit', 'view'])
-                            ->schema([
-                                Forms\Components\TextInput::make('password')
-                                    ->label(__('ui.password'))
-                                    ->placeholder(__('ui.password'))
-                                    ->password()
-                                    ->minLength(8)
-                                    ->maxLength(255)
-                                    ->rule('confirmed')
-                                    ->dehydrated(fn ($state) => filled($state))
-                                    ->validationMessages([
-                                        'required' => __('ui.required'),
-                                        'confirmed' => __('ui.password_confirmed'),
-                                        'min' => __('ui.password_min_length'),
-                                        'max' => __('ui.password_max_length'),
-                                    ])
-                                    ->required(),
-                                Forms\Components\TextInput::make('password_confirmation')
-                                    ->label(__('ui.password_confirmation'))
-                                    ->placeholder(__('ui.password_confirmation'))
-                                    ->password()
-                                    ->maxLength(255)
-                                    ->dehydrated(false), // asla DB'ye gitmesin
-                            ])->columns(2),
-
-                        Forms\Components\Section::make()
-                            ->visible(fn ($record) => $record->is(auth()->user()) || $record->roles->contains('name', 'super_admin'))
-                            ->visibleOn(['edit'])
-                            ->schema([
-                                Forms\Components\Fieldset::make(__('ui.new_password'))
-                                    ->schema([
-                                        Forms\Components\TextInput::make('new_password')
-                                            ->hiddenLabel()
-                                            ->placeholder(__('ui.new_password'))
-                                            ->password()
-                                            ->minLength(8)
-                                            ->nullable(),
-                                        Forms\Components\TextInput::make('new_password_confirmation')
-                                            ->hiddenLabel()
-                                            ->placeholder(__('ui.new_password_confirmation'))
-                                            ->password()
-                                            ->same('new_password')
-                                            ->minLength(8)
-                                            ->validationMessages([
-                                                'new_password_confirmation' => __('ui.password_confirmation'),
-                                                'required_with' => __('ui.password_confirmation_required'),
-                                                'same' => __('ui.password_same'),
-                                            ])
-                                            ->requiredWith('new_password'),
-                                    ]),
-                            ])->columns(2),
-                    ])->columns(3),
-            ]);
-        */
     }
 
     public static function table(Table $table): Table

@@ -26,7 +26,7 @@ class Manager extends Model
 
     public function user()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(User::class)->with('employee');
     }
 
     public function staffs()

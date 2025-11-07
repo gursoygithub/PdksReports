@@ -13,7 +13,7 @@ class Staff extends Model
 
     protected $fillable = [
         'manager_id',
-        'report_id',
+        'employee_id',
         'is_mailable',
         'created_by',
         'updated_by',
@@ -29,15 +29,22 @@ class Staff extends Model
         return $this->belongsTo(Manager::class);
     }
 
-    public function report()
+    public function employee()
     {
-        return $this->belongsTo(Report::class);
+        return $this->belongsTo(Employee::class)->with(['reports' => function ($query) {
+            $query->orderBy('date', 'desc');
+        }]);
     }
 
-    public function reports()
-    {
-        return $this->hasMany(Report::class, 'id', 'report_id');
-    }
+//    public function report()
+//    {
+//        return $this->belongsTo(Report::class);
+//    }
+//
+//    public function reports()
+//    {
+//        return $this->hasMany(Report::class, 'id', 'report_id');
+//    }
 
     public function createdBy()
     {
