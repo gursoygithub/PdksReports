@@ -81,48 +81,47 @@ class StaffResource extends Resource
             ->defaultSort('updated_at', 'desc')
             ->paginated([5, 10, 25, 50])
             ->columns([
-                Tables\Columns\TextColumn::make('report.tc_no')
+                Tables\Columns\TextColumn::make('employee.tc_no')
                     ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_tc_no'))
                     ->label(__('ui.tc_no'))
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('report.full_name')
+//                Tables\Columns\TextColumn::make('employee.full_name')
+//                    ->label(__('ui.full_name'))
+//                    ->badge()
+//                    ->color('primary')
+//                    ->searchable()
+//                    ->sortable(),
+                Tables\Columns\TextColumn::make('employee.full_name')
                     ->label(__('ui.full_name'))
                     ->badge()
                     ->color('primary')
-                    ->searchable()
-                    ->sortable(),
-                Tables\Columns\TextColumn::make('report.department_name')
+                    ->sortable(query: fn ($query, $direction) =>
+                        $query->orderBy(
+                            \App\Models\Employee::selectRaw("CONCAT(first_name, ' ', last_name)")
+                                ->whereColumn('employees.id', 'staff.employee_id'),
+                            $direction
+                        )
+                    )
+                    ->searchable(query: fn ($query, $search) =>
+                        $query->whereHas('employee', fn ($q) =>
+                        $q->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                        )
+                    ),
+        Tables\Columns\TextColumn::make('employee.latestReport.department_name')
                     ->label(__('ui.department'))
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('report.position_name')
+                Tables\Columns\TextColumn::make('employee.latestReport.position_name')
                     ->label(__('ui.position'))
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-//                Tables\Columns\TextColumn::make('report.date')
-//                    ->label(__('ui.date'))
-//                    ->badge()
-//                    ->color('primary')
-//                    ->date(),
-//                Tables\Columns\TextColumn::make('report.first_reading')
-//                    ->label(__('ui.first_reading'))
-//                    ->badge()
-//                    ->color('success')
-//                    ->Time(),
-//                Tables\Columns\TextColumn::make('report.last_reading')
-//                    ->label(__('ui.last_reading'))
-//                    ->badge()
-//                    ->color('success')
-//                    ->Time(),
-//                Tables\Columns\TextColumn::make('report.working_time')
-//                    ->label(__('ui.working_time'))
-//                    ->badge()
-//                    ->color('success'),
                 Tables\Columns\TextColumn::make('manager.user.name')
                     ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_managers'))
                     ->label(__('ui.manager'))
+                    ->badge()
+                    ->color('primary')
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('createdBy.name')

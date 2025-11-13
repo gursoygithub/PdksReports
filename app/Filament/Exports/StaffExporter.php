@@ -34,19 +34,19 @@ class StaffExporter extends Exporter
 
         $columns = [];
 
-        $columns = array_merge($columns, [
-            ExportColumn::make('report.full_name')
-                ->label(__('ui.full_name')),
-            ExportColumn::make('report.department_name')
-                ->label(__('ui.department')),
-            ExportColumn::make('report.position_name')
-                ->label(__('ui.position')),
-        ]);
-
         if ($isSuperAdmin || $canViewTcNo) {
-            $columns[] = ExportColumn::make('report.tc_no')
+            $columns[] = ExportColumn::make('employee.tc_no')
                 ->label(__('ui.tc_no'));
         }
+
+        $columns = array_merge($columns, [
+            ExportColumn::make('employee.full_name')
+                ->label(__('ui.full_name')),
+            ExportColumn::make('employee.latestReport.department_name')
+                ->label(__('ui.department')),
+            ExportColumn::make('employee.latestReport.position_name')
+                ->label(__('ui.position')),
+        ]);
 
         if ($isSuperAdmin || $canViewAllStaff) {
             $columns[] = ExportColumn::make('manager.user.name')

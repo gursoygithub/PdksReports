@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\BooleanStatusEnum;
+use App\Enums\ManagerStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -36,15 +37,18 @@ class Staff extends Model
         }]);
     }
 
-//    public function report()
-//    {
-//        return $this->belongsTo(Report::class);
-//    }
-//
-//    public function reports()
-//    {
-//        return $this->hasMany(Report::class, 'id', 'report_id');
-//    }
+    // Get all active reports associated with this staff through the employee
+    public function reports()
+    {
+        return $this->hasManyThrough(
+            Report::class,
+            Employee::class,
+            'id',       // Employee.id
+            'tc_no',    // Report.tc_no
+            'employee_id', // Staff.employee_id
+            'tc_no'     // Employee.tc_no
+        )->where('reports.status', ManagerStatusEnum::ACTIVE);
+    }
 
     public function createdBy()
     {

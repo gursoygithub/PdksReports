@@ -218,6 +218,7 @@ class UserResource extends Resource
                     ->badge()
                     ->sortable(),
                 Tables\Columns\TextColumn::make('is_manager')
+                    ->hidden()
                     ->label(__('ui.is_manager'))
                     ->badge()
                     ->sortable(),

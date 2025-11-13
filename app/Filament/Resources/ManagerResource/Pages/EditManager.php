@@ -23,19 +23,20 @@ class EditManager extends EditRecord
                 ->action(function ($record) {
                     DB::transaction(function () use ($record) {
                         try {
-                            //set is_manager to false for the related user
-                            $user = $record->user;
+                            //set is_manager to false for the related user employee
+                            $user = $record->user->employee;
+
                             if ($user) {
                                 $user->is_manager = false;
                                 $user->save();
                             }
 
-                            // Set is_staff to false for all related staffs' reports
+                            // Set is_staff to false for all related staffs' employees
                             foreach ($record->staffs as $staff) {
-                                $report = Report::find($staff->report_id);
-                                if ($report) {
-                                    $report->is_staff = false;
-                                    $report->save();
+                                $employee = $staff->employee;
+                                if ($employee) {
+                                    $employee->is_staff = false;
+                                    $employee->save();
                                 }
                             }
 
