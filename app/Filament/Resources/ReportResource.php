@@ -39,41 +39,41 @@ class ReportResource extends Resource
         return __('ui.report_management');
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        $user = auth()->user();
-
-        // 🧩 Super admin veya "view_all_reports" izni olan kullanıcı her şeyi görür
-        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
-            return Employee::distinct('tc_no')->count('tc_no');
-        }
-
-        // 🧩 Manager kaydı bulunmuyorsa
-        $manager = Manager::where('user_id', $user->id)->first();
-
-        if (! $manager) {
-            return null; // Manager değilse badge gösterme
-        }
-
-        // 🧩 Manager’a bağlı çalışanların ID'leri
-        $employeeIds = Staff::where('manager_id', $manager->id)->pluck('employee_id');
-
-        if ($employeeIds->isEmpty()) {
-            return 0;
-        }
-
-        // 🧩 Çalışanların TC numaraları
-        $tcNumbers = Employee::whereIn('id', $employeeIds)->pluck('tc_no');
-
-        if ($tcNumbers->isEmpty()) {
-            return 0;
-        }
-
-        // 🧩 Report tablosunda benzersiz çalışan (tc_no) bazlı sayım
-        return Report::whereIn('tc_no', $tcNumbers)
-            ->distinct('tc_no')
-            ->count('tc_no');
-    }
+//    public static function getNavigationBadge(): ?string
+//    {
+//        $user = auth()->user();
+//
+//        // 🧩 Super admin veya "view_all_reports" izni olan kullanıcı her şeyi görür
+//        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
+//            return Employee::distinct('tc_no')->count('tc_no');
+//        }
+//
+//        // 🧩 Manager kaydı bulunmuyorsa
+//        $manager = Manager::where('user_id', $user->id)->first();
+//
+//        if (! $manager) {
+//            return null; // Manager değilse badge gösterme
+//        }
+//
+//        // 🧩 Manager’a bağlı çalışanların ID'leri
+//        $employeeIds = Staff::where('manager_id', $manager->id)->pluck('employee_id');
+//
+//        if ($employeeIds->isEmpty()) {
+//            return 0;
+//        }
+//
+//        // 🧩 Çalışanların TC numaraları
+//        $tcNumbers = Employee::whereIn('id', $employeeIds)->pluck('tc_no');
+//
+//        if ($tcNumbers->isEmpty()) {
+//            return 0;
+//        }
+//
+//        // 🧩 Report tablosunda benzersiz çalışan (tc_no) bazlı sayım
+//        return Report::whereIn('tc_no', $tcNumbers)
+//            ->distinct('tc_no')
+//            ->count('tc_no');
+//    }
 
 //    public static function getNavigationBadge(): ?string
 //    {
@@ -98,44 +98,44 @@ class ReportResource extends Resource
 //        })->count();
 //    }
 
-    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
-    {
-        $user = auth()->user();
-
-        // Yetkili kullanıcılar tüm raporları görebilir
-        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
-            return parent::getEloquentQuery();
-        }
-
-        // 1️⃣ Kullanıcıya bağlı manager'ı bul
-        $manager = \App\Models\Manager::where('user_id', $user->id)->first();
-
-        if (! $manager) {
-            // Eğer kullanıcı manager değilse, boş sonuç dön
-            return parent::getEloquentQuery()->whereRaw('1=0');
-        }
-
-        // 2️⃣ Manager’ın staff’larından çalışanların ID’lerini çek
-        $employeeIds = \App\Models\Staff::where('manager_id', $manager->id)
-            ->pluck('employee_id')
-            ->toArray();
-
-        if (empty($employeeIds)) {
-            return parent::getEloquentQuery()->whereRaw('1=0');
-        }
-
-        // 3️⃣ Bu çalışanların tc_no değerlerini çek
-        $tcNumbers = \App\Models\Employee::whereIn('id', $employeeIds)
-            ->pluck('tc_no')
-            ->toArray();
-
-        if (empty($tcNumbers)) {
-            return parent::getEloquentQuery()->whereRaw('1=0');
-        }
-
-        // 4️⃣ Raporları bu TC numaralarına göre filtrele
-        return parent::getEloquentQuery()->whereIn('tc_no', $tcNumbers);
-    }
+//    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
+//    {
+//        $user = auth()->user();
+//
+//        // Yetkili kullanıcılar tüm raporları görebilir
+//        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
+//            return parent::getEloquentQuery();
+//        }
+//
+//        // 1️⃣ Kullanıcıya bağlı manager'ı bul
+//        $manager = \App\Models\Manager::where('user_id', $user->id)->first();
+//
+//        if (! $manager) {
+//            // Eğer kullanıcı manager değilse, boş sonuç dön
+//            return parent::getEloquentQuery()->whereRaw('1=0');
+//        }
+//
+//        // 2️⃣ Manager’ın staff’larından çalışanların ID’lerini çek
+//        $employeeIds = \App\Models\Staff::where('manager_id', $manager->id)
+//            ->pluck('employee_id')
+//            ->toArray();
+//
+//        if (empty($employeeIds)) {
+//            return parent::getEloquentQuery()->whereRaw('1=0');
+//        }
+//
+//        // 3️⃣ Bu çalışanların tc_no değerlerini çek
+//        $tcNumbers = \App\Models\Employee::whereIn('id', $employeeIds)
+//            ->pluck('tc_no')
+//            ->toArray();
+//
+//        if (empty($tcNumbers)) {
+//            return parent::getEloquentQuery()->whereRaw('1=0');
+//        }
+//
+//        // 4️⃣ Raporları bu TC numaralarına göre filtrele
+//        return parent::getEloquentQuery()->whereIn('tc_no', $tcNumbers);
+//    }
 
 
 //    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder

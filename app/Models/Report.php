@@ -10,6 +10,7 @@ class Report extends Model
 {
     use Notifiable;
     protected $fillable = [
+        'employee_id',
         'tc_no',
         'full_name',
         'department_name',
@@ -26,9 +27,39 @@ class Report extends Model
         'status' => ManagerStatusEnum::class,
     ];
 
-    // Relation with Employee model
     public function employee()
     {
-        return $this->belongsTo(Employee::class, 'tc_no', 'tc_no');
+        return $this->belongsTo(Employee::class, 'employee_id', 'id');
+    }
+
+    public function manager()
+    {
+        return $this->belongsTo(Manager::class, 'employee_id', 'employee_id');
+    }
+    public function staff()
+    {
+        return $this->belongsTo(Staff::class, 'employee_id', 'employee_id');
+    }
+
+    public static function query()
+    {
+        $hasPermission = auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_reports');
+
+        if ($hasPermission) {
+            return parent::query();
+        } else {
+            $manager = Manager::where('employee_id', auth()->user()->employee_id)->first();
+
+            if (! $manager) {
+                return parent::query()->whereRaw('1 = 0');
+            } else {
+                $employeeIds = Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                $tcNos = Employee::whereIn('id', $employeeIds)
+                    ->where('status', ManagerStatusEnum::ACTIVE)
+                    ->pluck('tc_no');
+
+                return parent::query()->whereIn('tc_no', $tcNos);
+            }
+        }
     }
 }

@@ -22,7 +22,7 @@ class CreateManager extends CreateRecord
         $data['created_by'] = auth()->id();
 
         // Set the is_manager field of the related employee to YES
-        $user = \App\Models\User::find($data['user_id']);
+        $user = \App\Models\User::find($data['employee_id']);
 
         if (!$user) {
             throw new \Exception('Kullanıcı bulunamadı.');
@@ -36,6 +36,8 @@ class CreateManager extends CreateRecord
         } else {
             throw new \Exception('Çalışan bulunamadı.');
         }
+
+        $data['employee_id'] = $employee->id;
 
         return $data;
     }

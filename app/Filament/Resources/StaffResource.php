@@ -38,32 +38,32 @@ class StaffResource extends Resource
         return __('ui.report_management');
     }
 
-    public static function getNavigationBadge(): ?string
-    {
-        if (auth()->user()?->hasRole('super_admin') || auth()->user()?->can('view_all_staff')) {
-            return static::getModel()::count();
-        }
-        return static::getModel()::whereIn('manager_id', function ($query) {
-            $query->select('id')
-                ->from('managers')
-                ->where('user_id', auth()->id());
-        })->count();
-    }
+//    public static function getNavigationBadge(): ?string
+//    {
+//        if (auth()->user()?->hasRole('super_admin') || auth()->user()?->can('view_all_staff')) {
+//            return static::getModel()::count();
+//        }
+//        return static::getModel()::whereIn('manager_id', function ($query) {
+//            $query->select('id')
+//                ->from('managers')
+//                ->where('employee_id', auth()->id());
+//        })->count();
+//    }
 
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->where(function ($query) {
-            if (auth()->user()?->hasRole('super_admin') || auth()->user()?->can('view_all_staff')
-            ) {
-                return $query;
-            }
-            return $query->whereIn('manager_id', function ($subQuery) {
-                $subQuery->select('id')
-                    ->from('managers')
-                    ->where('user_id', auth()->id());
-            });
-        });
-    }
+//    public static function getEloquentQuery(): Builder
+//    {
+//        return parent::getEloquentQuery()->where(function ($query) {
+//            if (auth()->user()?->hasRole('super_admin') || auth()->user()?->can('view_all_staff')
+//            ) {
+//                return $query;
+//            }
+//            return $query->whereIn('manager_id', function ($subQuery) {
+//                $subQuery->select('id')
+//                    ->from('managers')
+//                    ->where('user_id', auth()->id());
+//            });
+//        });
+//    }
 
     protected static ?int $navigationSort = 3;
 

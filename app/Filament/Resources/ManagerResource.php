@@ -6,6 +6,7 @@ use App\Enums\ActiveStatusEnum;
 use App\Enums\ManagerStatusEnum;
 use App\Filament\Resources\ManagerResource\Pages;
 use App\Filament\Resources\ManagerResource\RelationManagers;
+use App\Models\Employee;
 use App\Models\Manager;
 use App\Models\Report;
 use Filament\Forms;
@@ -74,7 +75,7 @@ class ManagerResource extends Resource
                         Fieldset::make(__('ui.manager_information'))
                             ->columns(1)
                             ->schema([
-                                Forms\Components\Select::make('user_id')
+                                Forms\Components\Select::make('employee_id')
                                     ->label(__('ui.manager'))
                                     ->searchable()
                                     ->preload()
@@ -83,19 +84,21 @@ class ManagerResource extends Resource
                                             ->when($record, function ($query) use ($record) {
                                                 return $query->where('id', '!=', $record->id);
                                             })
-                                            ->pluck('user_id')
+                                            ->pluck('employee_id')
                                             ->toArray();
 
                                         $query = \App\Models\User::query()
-                                            //->where('is_manager', true)
-                                            ->where('id', '!=', Auth::id())
-                                            ->where('status', ManagerStatusEnum::ACTIVE);
+                                            ->whereHas('employee', function ($q) {
+                                                $q->where('is_manager', false)
+                                                    ->where('status', ManagerStatusEnum::ACTIVE);
+                                            })
+                                            ->where('id', '!=', Auth::id());
 
                                         if (!auth()->user()?->hasRole('super_admin') && !auth()->user()?->can('view_all_managers')) {
                                             $query->where('created_by', auth()->id());
                                         }
 
-                                        $users = $query->whereNotIn('id', $existingUserIds)
+                                        $users = $query->whereNotIn('employee_id', $existingUserIds)
                                             ->orderBy('name')
                                             ->get();
 
@@ -116,7 +119,7 @@ class ManagerResource extends Resource
             ->defaultSort('updated_at', 'desc')
             ->paginated([5, 10, 25, 50])
             ->columns([
-                Tables\Columns\TextColumn::make('user.tc_no')
+                Tables\Columns\TextColumn::make('user.employee.tc_no')
                     ->visible(fn ($record) => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_tc_no'))
                     ->label(__('ui.tc_no'))
                     ->searchable()
@@ -181,18 +184,19 @@ class ManagerResource extends Resource
                                 DB::transaction(function () use ($record) {
                                     try {
                                         //set is_manager to false for the related user
-                                        $user = $record->user;
+                                        $user = $record->user->employee;
+
                                         if ($user) {
                                             $user->is_manager = false;
                                             $user->save();
                                         }
 
-                                        // Set is_staff to false for all related staffs' reports
+                                        // Set is_staff to false for all related employees
                                         foreach ($record->staffs as $staff) {
-                                            $report = Report::find($staff->report_id);
-                                            if ($report) {
-                                                $report->is_staff = false;
-                                                $report->save();
+                                            $employee = $staff->employee;
+                                            if ($employee) {
+                                                $employee->is_staff = false;
+                                                $employee->save();
                                             }
                                         }
 

@@ -93,7 +93,7 @@ class ViewManager extends ViewRecord
                     ->schema([
                         Infolists\Components\Fieldset::make(__('ui.manager_information'))
                             ->schema([
-                                Infolists\Components\TextEntry::make('user.employee.tc_no')
+                                Infolists\Components\TextEntry::make('employee.tc_no')
                                     ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_tc_no'))
                                     ->label(__('ui.tc_no'))
                                     ->icon('heroicon-o-identification')

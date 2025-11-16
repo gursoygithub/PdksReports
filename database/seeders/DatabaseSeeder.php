@@ -20,17 +20,6 @@ class DatabaseSeeder extends Seeder
             InitSeeder::class,
         ]);
 
-        // Son 90 günlük raporları çek
-        try {
-            $this->command->info('⏳ Son 90 günlük rapor çekimi başlatılıyor...');
-            Artisan::call('reports:90days');
-            $this->command->info(Artisan::output());
-            $this->command->info('✅ Son 90 günlük rapor çekimi tamamlandı.');
-        } catch (\Throwable $e) {
-            $this->command->error('❌ 90 günlük rapor çekiminde hata: ' . $e->getMessage());
-            Log::error('90 günlük rapor hatası', ['exception' => $e]);
-        }
-
         // Personel verileri çekimi
         try {
             $this->command->info('⏳ Personel verileri çekimi başlatılıyor...');
@@ -40,6 +29,17 @@ class DatabaseSeeder extends Seeder
         } catch (\Throwable $e) {
             $this->command->error('❌ Personel verileri çekiminde hata: ' . $e->getMessage());
             Log::error('Personel verileri çekim hatası', ['exception' => $e]);
+        }
+
+        // Son 90 günlük raporları çek
+        try {
+            $this->command->info('⏳ Son 90 günlük rapor çekimi başlatılıyor...');
+            Artisan::call('reports:90days');
+            $this->command->info(Artisan::output());
+            $this->command->info('✅ Son 90 günlük rapor çekimi tamamlandı.');
+        } catch (\Throwable $e) {
+            $this->command->error('❌ 90 günlük rapor çekiminde hata: ' . $e->getMessage());
+            Log::error('90 günlük rapor hatası', ['exception' => $e]);
         }
     }
 }
