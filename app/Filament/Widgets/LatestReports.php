@@ -3,6 +3,7 @@
 namespace App\Filament\Widgets;
 
 use App\Enums\ManagerStatusEnum;
+use Carbon\Carbon;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
@@ -79,16 +80,21 @@ class LatestReports extends BaseWidget
                     ->badge()
                     ->color('primary')
                     ->date(),
+                Tables\Columns\TextColumn::make('day')
+                    ->label(__('ui.day'))
+                    ->badge()
+                    ->color('primary')
+                    ->formatStateUsing(fn ($state, $record) => Carbon::parse($record->date)->translatedFormat('l')),
                 Tables\Columns\TextColumn::make('first_reading')
                     ->label(__('ui.first_reading'))
                     ->badge()
                     ->color('success')
-                    ->dateTime(),
+                    ->time(),
                 Tables\Columns\TextColumn::make('last_reading')
                     ->label(__('ui.last_reading'))
                     ->badge()
                     ->color('success')
-                    ->dateTime(),
+                    ->time(),
                 Tables\Columns\TextColumn::make('working_time')
                     ->label(__('ui.working_time'))
                     ->badge()

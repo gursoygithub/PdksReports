@@ -371,4 +371,5 @@ return [
     'list_of_the_last_10_card_reading_lists' => 'Son 10 kart okutma listesi',
     'card_reading_list' => 'Kart Okutma Listesi',
     'last_10_records' => 'Son 10 Kayıt',
+    'day' => 'Gün',
 ];

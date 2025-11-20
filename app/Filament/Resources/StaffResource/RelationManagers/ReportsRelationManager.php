@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\StaffResource\RelationManagers;
 
+use Carbon\Carbon;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -53,6 +54,12 @@ class ReportsRelationManager extends RelationManager
                     ->badge()
                     ->date()
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('day')
+                    ->label(__('ui.day'))
+                    ->badge()
+                    ->color('primary')
+                    ->formatStateUsing(fn ($state, $record) => Carbon::parse($record->date)->translatedFormat('l')),
                 Tables\Columns\TextColumn::make('first_reading')
                     ->label(__('ui.first_reading'))
                     ->badge()
