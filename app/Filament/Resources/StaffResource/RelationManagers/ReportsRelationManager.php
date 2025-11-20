@@ -91,4 +91,9 @@ class ReportsRelationManager extends RelationManager
     {
         return false;
     }
+
+    protected function canDelete(Model $record): bool
+    {
+        return false;
+    }
 }

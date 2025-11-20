@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::create('reports', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('employee_id')->constrained()->onDelete('cascade');
             $table->string('external_id')->unique(); // Unique external identifier
             $table->string('tc_no')->nullable();
             $table->string('full_name')->nullable();

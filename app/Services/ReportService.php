@@ -10,135 +10,40 @@ use Illuminate\Support\Facades\Log;
 class ReportService
 {
     /**
-     * STREAMING (gerçek zamanlı akış) yöntemiyle raporları alır ve kaydeder.
-     */
-    public function reportsStreamService(): int
-    {
-        $apiUrl = 'http://10.10.50.6:8080/api/zk/cardreadingsall';
-        $batchSize = 1000;
-        $buffer = [];
-        $totalProcessed = 0;
-
-        try {
-            Log::info("Streaming başlatılıyor: {$apiUrl}");
-
-            $response = Http::withOptions(['stream' => true])
-                ->timeout(0)
-                ->get($apiUrl);
-
-            if ($response->failed()) {
-                throw new \Exception("API isteği başarısız oldu. HTTP Kod: " . $response->status());
-            }
-
-            foreach ($response->toPsrResponse()->getBody() as $chunk) {
-                $line = trim($chunk);
-
-                if (empty($line)) {
-                    continue;
-                }
-
-                if (str_starts_with($line, 'data:')) {
-                    $line = trim(substr($line, 5));
-                }
-
-                $data = json_decode($line, true);
-
-                if (json_last_error() !== JSON_ERROR_NONE) {
-                    Log::warning('JSON çözümleme hatası', ['chunk' => $line]);
-                    continue;
-                }
-
-                $buffer[] = $this->formatData($data);
-
-                if (count($buffer) >= $batchSize) {
-                    $this->upsertReports($buffer);
-                    $totalProcessed += count($buffer);
-                    $buffer = [];
-                }
-            }
-
-            if (!empty($buffer)) {
-                $this->upsertReports($buffer);
-                $totalProcessed += count($buffer);
-            }
-
-            Log::info("Streaming tamamlandı. Toplam kayıt: {$totalProcessed}");
-            return $totalProcessed;
-
-        } catch (\Throwable $e) {
-            Log::error('Report streaming hatası: ' . $e->getMessage(), [
-                'exception' => $e
-            ]);
-            throw $e;
-        }
-    }
-
-    /**
-     * GÜNLÜK (tam veri) rapor çekimi.
+     * Günlük rapor.
      */
     public function reportsDailyService(): int
     {
-        $apiUrl = 'http://10.10.50.6:8080/api/zk/cardreadingsdaily';
-        $batchSize = 1000;
-        $buffer = [];
-        $totalProcessed = 0;
-
-        try {
-            Log::info("Günlük rapor çekiliyor: {$apiUrl}");
-
-            $response = Http::timeout(60)->get($apiUrl);
-
-            if ($response->failed()) {
-                Log::error('API hatası', [
-                    'url' => $apiUrl,
-                    'status' => $response->status(),
-                    'body' => $response->body(),
-                ]);
-                throw new \Exception("API isteği başarısız oldu. HTTP Kod: " . $response->status());
-            }
-
-            $dataList = $response->json();
-
-            foreach ($dataList as $data) {
-                $buffer[] = $this->formatData($data);
-
-                if (count($buffer) >= $batchSize) {
-                    $this->upsertReports($buffer);
-                    $totalProcessed += count($buffer);
-                    $buffer = [];
-                }
-            }
-
-            if (!empty($buffer)) {
-                $this->upsertReports($buffer);
-                $totalProcessed += count($buffer);
-            }
-
-            Log::info("Daily report tamamlandı. Toplam kayıt: {$totalProcessed}");
-            return $totalProcessed;
-
-        } catch (\Throwable $e) {
-            Log::error('Report daily hatası: ' . $e->getMessage(), [
-                'exception' => $e
-            ]);
-            throw $e;
-        }
+        return $this->processReports(
+            'http://10.10.50.6:8080/api/zk/cardreadingsdaily',
+            60
+        );
     }
 
     /**
-     * SON 90 GÜNLÜK rapor çekimi.
+     * 90 günlük rapor.
      */
     public function reportsLast90DaysService(): int
     {
-        $apiUrl = 'http://10.10.50.6:8080/api/zk/cardreadingsninedays';
+        return $this->processReports(
+            'http://10.10.50.6:8080/api/zk/cardreadingsninedays',
+            120
+        );
+    }
+
+    /**
+     * Ortak işlem metodu.
+     */
+    protected function processReports(string $apiUrl, int $timeout): int
+    {
         $batchSize = 1000;
         $buffer = [];
         $totalProcessed = 0;
 
         try {
-            Log::info("90 günlük rapor çekiliyor: {$apiUrl}");
+            Log::info("Rapor çekiliyor: {$apiUrl}");
 
-            $response = Http::timeout(120)->get($apiUrl);
+            $response = Http::timeout($timeout)->get($apiUrl);
 
             if ($response->failed()) {
                 Log::error('API hatası', [
@@ -152,40 +57,75 @@ class ReportService
             $dataList = $response->json();
 
             foreach ($dataList as $data) {
-                $buffer[] = $this->formatData($data);
+
+                // TC boşsa hiç ekleme
+                if (empty($data['tc_no'])) {
+                    continue;
+                }
+
+                $formatted = $this->formatData($data);
+
+                if ($formatted !== null) {
+                    $buffer[] = $formatted;
+                }
 
                 if (count($buffer) >= $batchSize) {
-                    $this->upsertReports($buffer);
+                    $this->handleBatch($buffer);
                     $totalProcessed += count($buffer);
                     $buffer = [];
                 }
             }
 
             if (!empty($buffer)) {
-                $this->upsertReports($buffer);
+                $this->handleBatch($buffer);
                 $totalProcessed += count($buffer);
             }
 
-            Log::info("90 günlük rapor tamamlandı. Toplam kayıt: {$totalProcessed}");
+            Log::info("Rapor tamamlandı. Toplam kayıt: {$totalProcessed}");
             return $totalProcessed;
 
         } catch (\Throwable $e) {
-            Log::error('Report 90 günlük hatası: ' . $e->getMessage(), [
+            Log::error('Rapor hatası: ' . $e->getMessage(), [
                 'exception' => $e
             ]);
             throw $e;
         }
     }
 
+    /**
+     * Batch işle: employee eşleme + upsert.
+     */
+    protected function handleBatch(array $buffer): void
+    {
+        // Tüm TC’leri al
+        $tcList = array_column($buffer, 'tc_no');
+
+        // Çalışanları tek seferde çek (performanslı)
+        $employees = DB::table('employees')
+            ->whereIn('tc_no', $tcList)
+            ->pluck('id', 'tc_no')
+            ->toArray();
+
+        // employee_id’leri buffer’a ekle
+        foreach ($buffer as &$row) {
+            $row['employee_id'] = $employees[$row['tc_no']] ?? null;
+        }
+
+        $this->upsertReports($buffer);
+    }
 
     /**
-     * Tek kayıt formatlama metodu — hem stream hem daily için ortak.
+     * Kayıt formatlama.
      */
-    protected function formatData(array $data): array
+    protected function formatData(array $data): ?array
     {
+        if (empty($data['tc_no'])) {
+            return null;
+        }
+
         return [
             'external_id'     => $data['external_id'] ?? null,
-            'tc_no'           => $data['tc_no'] ?? null,
+            'tc_no'           => $data['tc_no'],
             'full_name'       => $data['full_name'] ?? null,
             'department_name' => $data['department_name'] ?? null,
             'position_name'   => $data['position_name'] ?? null,
@@ -201,7 +141,7 @@ class ReportService
     }
 
     /**
-     * Tarihleri MySQL formatına dönüştürür.
+     * Tarih formatlama.
      */
     protected static function parseDate(?string $value): ?string
     {
@@ -214,26 +154,29 @@ class ReportService
         } catch (\Exception $e) {
             if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}\.\d+$/', $value)) {
                 try {
-                    return Carbon::createFromFormat('Y-m-d H:i:s.u', $value)->format('Y-m-d H:i:s');
+                    return Carbon::createFromFormat('Y-m-d H:i:s.u', $value)
+                        ->format('Y-m-d H:i:s');
                 } catch (\Exception $ex) {
                     Log::warning('Tarih dönüştürme hatası (milisaniyeli)', ['value' => $value]);
                     return null;
                 }
             }
+
             Log::warning('Tarih dönüştürme hatası', ['value' => $value]);
             return null;
         }
     }
 
     /**
-     * Toplu upsert işlemi.
+     * Upsert işlemi.
      */
     protected function upsertReports(array $buffer): void
     {
         DB::table('reports')->upsert(
             $buffer,
-            ['external_id'],
+            ['external_id'], // eşsiz alan
             [
+                'employee_id',
                 'tc_no',
                 'full_name',
                 'department_name',

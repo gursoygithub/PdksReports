@@ -13,7 +13,7 @@ class Manager extends Model
     use Notifiable, SoftDeletes;
 
     protected $fillable = [
-        'user_id',
+        'employee_id',
         'status',
         'created_by',
         'updated_by',
@@ -24,9 +24,16 @@ class Manager extends Model
         'status' => ManagerStatusEnum::class,
     ];
 
+    public function employee()
+    {
+        return $this->belongsTo(Employee::class, 'employee_id', 'id')->with(['reports' => function ($query) {
+            $query->orderBy('date', 'desc');
+        }]);
+    }
+
     public function user()
     {
-        return $this->belongsTo(User::class)->with('employee');
+        return $this->belongsTo(User::class, 'employee_id', 'employee_id');
     }
 
     public function staffs()

@@ -35,7 +35,7 @@ class Employee extends Model
     //relation with Report model
     public function reports()
     {
-        return $this->hasMany(Report::class, 'tc_no', 'tc_no');
+        return $this->hasMany(Report::class, 'employee_id', 'employee_id');
     }
 
     // Accessor for full name
@@ -48,7 +48,19 @@ class Employee extends Model
     // Örneğin: department_name, position_name gibi.
     public function latestReport()
     {
-        return $this->hasOne(Report::class, 'tc_no', 'tc_no')->latestOfMany();
+        return $this->hasOne(Report::class, 'employee_id', 'id')->latestOfMany();
+    }
+
+    //relation with Manager model
+    public function manager()
+    {
+        return $this->hasOne(Manager::class, 'employee_id', 'id');
+    }
+
+    //relation with Staff model
+    public function staffs()
+    {
+        return $this->hasMany(Staff::class, 'employee_id', 'id');
     }
 
 }

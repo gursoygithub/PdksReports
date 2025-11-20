@@ -141,10 +141,11 @@ class StaffsRelationManager extends RelationManager
                 Tables\Actions\CreateAction::make()
                     ->mutateFormDataUsing(function (array $data): array {
                         $data['created_by'] = auth()->id();
-                        $data['manager_id'] = $this->ownerRecord->id;
+                        $data['manager_id'] = $this->ownerRecord->employee_id;
 
                         // Update the related employee to set is_staff to true
                         $employee = Employee::find($data['employee_id']);
+
                         if ($employee) {
                             $employee->is_staff = BooleanStatusEnum::YES;
                             $employee->save();

@@ -21,13 +21,23 @@ class CreateManager extends CreateRecord
     {
         $data['created_by'] = auth()->id();
 
-        // set related user is_manager to true
-        $user = \App\Models\User::find($data['user_id']);
+        // Set the is_manager field of the related employee to YES
+        $user = \App\Models\User::find($data['employee_id']);
 
-        if ($user) {
-            $user->is_manager = true;
-            $user->save();
+        if (!$user) {
+            throw new \Exception('Kullanıcı bulunamadı.');
         }
+
+        $employee = $user->employee;
+
+        if ($employee) {
+            $employee->is_manager = \App\Enums\BooleanStatusEnum::YES;
+            $employee->save();
+        } else {
+            throw new \Exception('Çalışan bulunamadı.');
+        }
+
+        $data['employee_id'] = $employee->id;
 
         return $data;
     }

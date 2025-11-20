@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('managers', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('user_id')->nullable()->constrained()->onDelete('set null');
+            $table->foreignId('employee_id')->nullable()->constrained()->onDelete('set null');
             //$table->string('email')->nullable();
             $table->tinyInteger('status')->default(0); // 0: ACTIVE, 100: INACTIVE
 

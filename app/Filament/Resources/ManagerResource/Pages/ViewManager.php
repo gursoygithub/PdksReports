@@ -32,56 +32,56 @@ class ViewManager extends ViewRecord
                     return $data;
                 }),
             Actions\DeleteAction::make()
-//                ->requiresConfirmation()
-//                ->visible(fn ($record) => $record->staffs()->count() === 0)
-//                ->action(function ($record) {
-//                    DB::transaction(function () use ($record) {
-//                        try {
-//                            //set is_manager to false for the related user
-//                            $user = $record->user;
-//                            if ($user) {
-//                                $user->is_manager = false;
-//                                $user->save();
-//                            }
-//
-//                            // Set is_staff to false for all related staffs' reports
-//                            foreach ($record->staffs as $staff) {
-//                                $report = Report::find($staff->report_id);
-//                                if ($report) {
-//                                    $report->is_staff = false;
-//                                    $report->save();
-//                                }
-//                            }
-//
-//                            // Soft delete all related staffs
-//                            foreach ($record->staffs as $staff) {
-//                                $staff->deleted_by = Auth::id();
-//                                $staff->deleted_at = now();
-//                                $staff->save();
-//                                $staff->delete();
-//                            }
-//
-//                            // Soft delete the manager record
-//                            $record->deleted_by = Auth::id();
-//                            $record->deleted_at = now();
-//                            $record->save();
-//
-//                            $record->delete();
-//
-//                            Notification::make()
-//                                ->title(__('ui.deletion_successful'))
-//                                ->success()
-//                                ->send();
-//
-//                            $this->redirect(ManagerResource::getUrl('index'));
-//                        } catch (\Exception $e) {
-//                            Notification::make()
-//                                ->title(__('ui.deletion_failed'))
-//                                ->danger()
-//                                ->send();
-//                        }
-//                    });
-//                })
+                ->requiresConfirmation()
+                ->visible(fn ($record) => $record->staffs()->count() === 0)
+                ->action(function ($record) {
+                    DB::transaction(function () use ($record) {
+                        try {
+                            //set is_manager to false for the related user employee
+                            $user = $record->user->employee;
+                            if ($user) {
+                                $user->is_manager = false;
+                                $user->save();
+                            }
+
+                            // Set is_staff to false for all related staffs' employees
+                            foreach ($record->staffs as $staff) {
+                                $employee = $staff->employee;
+                                if ($employee) {
+                                    $employee->is_staff = false;
+                                    $employee->save();
+                                }
+                            }
+
+                            // Soft delete all related staffs
+                            foreach ($record->staffs as $staff) {
+                                $staff->deleted_by = Auth::id();
+                                $staff->deleted_at = now();
+                                $staff->save();
+                                $staff->delete();
+                            }
+
+                            // Soft delete the manager record
+                            $record->deleted_by = Auth::id();
+                            $record->deleted_at = now();
+                            $record->save();
+
+                            $record->delete();
+
+                            Notification::make()
+                                ->title(__('ui.deletion_successful'))
+                                ->success()
+                                ->send();
+
+                            $this->redirect(ManagerResource::getUrl('index'));
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title(__('ui.deletion_failed'))
+                                ->danger()
+                                ->send();
+                        }
+                    });
+                })
         ];
     }
 
@@ -93,7 +93,7 @@ class ViewManager extends ViewRecord
                     ->schema([
                         Infolists\Components\Fieldset::make(__('ui.manager_information'))
                             ->schema([
-                                Infolists\Components\TextEntry::make('user.employee.tc_no')
+                                Infolists\Components\TextEntry::make('employee.tc_no')
                                     ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_tc_no'))
                                     ->label(__('ui.tc_no'))
                                     ->icon('heroicon-o-identification')
