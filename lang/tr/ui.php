@@ -363,4 +363,8 @@ return [
     'cart_reading_reports' => 'Kart Okutma Raporları',
     'manager_staff' => 'Amir & Çalışanları',
     'manager_staffs' => 'Amir & Çalışanları',
+    'my_staff' => 'Çalışanım',
+    'my_staffs' => 'Çalışanlarım',
+    'panel' => 'Panel',
+    'panel_management' => 'Panel Yönetimi',
 ];

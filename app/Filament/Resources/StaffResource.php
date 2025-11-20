@@ -25,12 +25,12 @@ class StaffResource extends Resource
 
     public static function getModelLabel(): string
     {
-        return __('ui.manager_staff');
+        return __('ui.my_staff');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('ui.manager_staffs');
+        return __('ui.my_staffs');
     }
 
     public static function getNavigationGroup(): ?string
@@ -59,7 +59,7 @@ class StaffResource extends Resource
         }
     }
 
-    protected static ?int $navigationSort = 3;
+    //protected static ?int $navigationSort = 200;
 
     public static function form(Form $form): Form
     {

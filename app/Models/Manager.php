@@ -55,4 +55,15 @@ class Manager extends Model
     {
         return $this->belongsTo(User::class, 'deleted_by');
     }
+
+    public static function query()
+    {
+        $hasPermission = auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_managers');
+
+        if ($hasPermission) {
+            return parent::query();
+        } else {
+            return parent::query()->where('created_by', auth()->user()->id);
+        }
+    }
 }

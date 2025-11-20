@@ -34,7 +34,7 @@ class EmployeeResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return __('ui.employee_management');
+        return __('ui.panel_management');
     }
 
     public static function getNavigationBadge(): ?string

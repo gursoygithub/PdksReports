@@ -39,7 +39,7 @@ class ManagerResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return __('ui.report_management');
+        return __('ui.panel_management');
     }
 
     public static function getNavigationBadge(): ?string
@@ -51,20 +51,20 @@ class ManagerResource extends Resource
         }
     }
 
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->where(function ($query) {
+//    public static function getEloquentQuery(): Builder
+//    {
+//        return parent::getEloquentQuery()->where(function ($query) {
+//
+//            if (auth()->user()?->hasRole('super_admin') || auth()->user()?->can('view_all_managers')
+//            ) {
+//                return $query;
+//            }
+//
+//            return $query->where('created_by', auth()->id());
+//        });
+//    }
 
-            if (auth()->user()?->hasRole('super_admin') || auth()->user()?->can('view_all_managers')
-            ) {
-                return $query;
-            }
-
-            return $query->where('created_by', auth()->id());
-        });
-    }
-
-    protected static ?int $navigationSort = 2;
+    //protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {
@@ -124,16 +124,27 @@ class ManagerResource extends Resource
                     ->label(__('ui.tc_no'))
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('user.name')
+                Tables\Columns\TextColumn::make('employee.full_name')
                     ->label(__('ui.full_name'))
                     ->badge()
                     ->color('primary')
-                    ->searchable(),
-                Tables\Columns\TextColumn::make('user.report.department_name')
+                    ->sortable(query: fn ($query, $direction) =>
+                        $query->orderBy(
+                            \App\Models\Employee::selectRaw("CONCAT(first_name, ' ', last_name)")
+                                ->whereColumn('employees.id', 'staff.employee_id'),
+                            $direction
+                        )
+                    )
+                    ->searchable(query: fn ($query, $search) =>
+                        $query->whereHas('employee', fn ($q) =>
+                        $q->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
+                        )
+                    ),
+                Tables\Columns\TextColumn::make('user.employee.latestReport.department_name')
                     ->label(__('ui.department'))
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('user.report.position_name')
+                Tables\Columns\TextColumn::make('user.employee.latestReport.position_name')
                     ->label(__('ui.position'))
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
