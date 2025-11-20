@@ -7,10 +7,11 @@ use App\Enums\ManagerStatusEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\MediaLibrary\HasMedia;
 
-class Manager extends Model
+class Manager extends Model Implements HasMedia
 {
-    use Notifiable, SoftDeletes;
+    use Notifiable, SoftDeletes, \Spatie\MediaLibrary\InteractsWithMedia;
 
     protected $fillable = [
         'employee_id',
@@ -65,5 +66,11 @@ class Manager extends Model
         } else {
             return parent::query()->where('created_by', auth()->user()->id);
         }
+    }
+
+    public function registerMediaCollections(): void
+    {
+        $this->addMediaCollection('manager_profile')
+            ->singleFile();
     }
 }

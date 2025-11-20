@@ -74,7 +74,19 @@ class ManagerResource extends Resource
                     ->schema([
                         Fieldset::make(__('ui.manager_information'))
                             ->columns(1)
-                            ->schema([
+                            ->schema([Forms\Components\SpatieMediaLibraryFileUpload::make('images')
+                                ->label(__('ui.images'))
+                                ->helperText(__('ui.task_photo_helper_text'))
+                                ->collection('manager_profile')
+                                ->downloadable()
+                                ->openable()
+                                ->maxFiles(10)
+                                ->image()
+                                ->required()
+                                ->validationMessages([
+                                    'required' => __('ui.required'),
+                                ])
+                                ->columnSpanFull(),
                                 Forms\Components\Select::make('employee_id')
                                     ->label(__('ui.manager'))
                                     ->searchable()
