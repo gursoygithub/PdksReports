@@ -7,7 +7,7 @@ ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && \
     apt-get install -y software-properties-common curl wget gnupg ca-certificates apt-transport-https unzip git lsb-release
 
-# Add Microsoft SQL Server package repository (değişen yöntem)
+# Add Microsoft SQL Server package repository
 RUN set -eux; \
     mkdir -p /etc/apt/keyrings; \
     wget -O - https://packages.microsoft.com/keys/microsoft.asc > /etc/apt/keyrings/microsoft.asc && \
@@ -27,7 +27,7 @@ RUN ACCEPT_EULA=Y apt-get install -y \
     msodbcsql18 \
     mssql-tools18
 
-# Install PHP 8.4 and required extensions
+# Install PHP 8.4 and extensions + supervisor + nginx
 RUN apt-get install -y \
     php8.4 \
     php8.4-cli \
@@ -66,9 +66,10 @@ RUN pecl channel-update pecl.php.net && \
 RUN curl -sS https://getcomposer.org/installer | php && \
     mv composer.phar /usr/local/bin/composer
 
-# Copy Nginx and startup config
+# Copy configs
 COPY ./.docker/start.sh /start.sh
 COPY ./.docker/nginx.conf /etc/nginx/nginx.conf
+COPY ./.docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 # Set working directory
 WORKDIR /var/www
