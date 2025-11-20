@@ -74,7 +74,9 @@ class ManagerResource extends Resource
                     ->schema([
                         Fieldset::make(__('ui.manager_information'))
                             ->columns(1)
-                            ->schema([Forms\Components\SpatieMediaLibraryFileUpload::make('images')
+                            ->schema([
+                                Forms\Components\SpatieMediaLibraryFileUpload::make('images')
+                                    ->hidden()
                                 ->label(__('ui.images'))
                                 ->helperText(__('ui.task_photo_helper_text'))
                                 ->collection('manager_profile')
