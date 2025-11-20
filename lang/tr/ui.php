@@ -367,4 +367,8 @@ return [
     'my_staffs' => 'Çalışanlarım',
     'panel' => 'Panel',
     'panel_management' => 'Panel Yönetimi',
+    'latest_reports' => 'Son Raporlar',
+    'list_of_the_last_10_card_reading_lists' => 'Son 10 kart okutma listesi',
+    'card_reading_list' => 'Kart Okutma Listesi',
+    'last_10_records' => 'Son 10 Kayıt',
 ];
