@@ -64,4 +64,21 @@ class Staff extends Model
     {
         return $this->belongsTo(User::class, 'deleted_by');
     }
+
+    public static function query()
+    {
+        $hasPermission = auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_staff');
+
+        if ($hasPermission) {
+            return parent::query();
+        } else {
+            $manager = Manager::where('employee_id', auth()->user()->employee_id)->first();
+
+            if (! $manager) {
+                return parent::query()->whereRaw('1 = 0');
+            } else {
+                return parent::query()->where('manager_id', $manager->id);
+            }
+        }
+    }
 }

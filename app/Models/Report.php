@@ -17,8 +17,8 @@ class Report extends Model
         'position_name',
         'date',
         'day',
-        'first_reading',
-        'last_reading',
+//        'first_reading',
+//        'last_reading',
         'working_time',
         'status',
     ];

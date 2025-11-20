@@ -357,4 +357,10 @@ return [
     'create_time' => 'Oluşturma Zamanı',
     'update_time' => 'Güncelleme Zamanı',
     'has_manager' => 'Amiri Var Mı',
+    'daily_report' => 'Günlük Rapor',
+    'daily_reports' => 'Günlük Raporlar',
+    'all_reports' => 'Tüm Raporlar',
+    'cart_reading_reports' => 'Kart Okutma Raporları',
+    'manager_staff' => 'Amir & Çalışanları',
+    'manager_staffs' => 'Amir & Çalışanları',
 ];

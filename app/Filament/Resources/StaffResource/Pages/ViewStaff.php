@@ -18,7 +18,14 @@ class ViewStaff extends ViewRecord
             ->schema([
                 Infolists\Components\Card::make()
                     ->schema([
-                        Infolists\Components\Fieldset::make(__('ui.manager_information'))
+                        Infolists\Components\TextEntry::make('manager.user.name')
+                            ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_managers'))
+                            ->label(__('ui.manager'))
+                            ->badge()
+                            ->color('primary')
+                            ->icon('heroicon-o-user')
+                            ->placeholder('-'),
+                        Infolists\Components\Fieldset::make(__('ui.staff_information'))
                             ->schema([
                                 Infolists\Components\TextEntry::make('employee.tc_no')
                                     ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_tc_no'))

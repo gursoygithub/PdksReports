@@ -24,76 +24,61 @@ class ListReports extends ListRecords
         ];
     }
 
-//    public function getTabs(): array
-//    {
-//        $user = auth()->user();
-//        $today = Carbon::today()->toDateString();
-//
-//        // 🧩 1. Erişim kısıtlaması
-//        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
-//            $employeeQuery = Employee::query();
-//            $reportQuery = Report::query();
-//        } else {
-//            // Manager kaydı
-//            $manager = Manager::where('user_id', $user->id)->first();
-//
-//            if (! $manager) {
-//                $employeeQuery = Employee::whereRaw('1 = 0');
-//                $reportQuery = Report::whereRaw('1 = 0');
-//            } else {
-//                $employeeIds = Staff::where('manager_id', $manager->id)->pluck('employee_id');
-//                $tcNos = Employee::whereIn('id', $employeeIds)->pluck('tc_no');
-//
-//                $employeeQuery = Employee::whereIn('id', $employeeIds);
-//                $reportQuery = Report::whereIn('tc_no', $tcNos);
-//            }
-//        }
-//
-//        // 🧮 2. Sayımlar
-//        $todayReports = (clone $reportQuery)->whereDate('date', $today);
-//
-//        $allCount        = (clone $todayReports)->count();
-//        $checkedCount    = (clone $todayReports)->whereNotNull('first_reading')->count();
-//        $notCheckedCount = (clone $todayReports)->whereNull('first_reading')->count();
-//
-//        $activeCount     = (clone $employeeQuery)->where('status', ManagerStatusEnum::ACTIVE)->count();
-//        $inactiveCount   = (clone $employeeQuery)->where('status', ManagerStatusEnum::INACTIVE)->count();
-//
-//        // 🧱 3. Sekmeler
-//        return [
-//            'all' => Tab::make(__('ui.all'))
-//                ->badge($allCount)
-//                ->badgeIcon('heroicon-o-rectangle-stack')
-//                ->modifyQueryUsing(fn ($query) =>
-//                $query->whereDate('date', $today)
-//                ),
-//
-//            'checked' => Tab::make(__('ui.checked'))
-//                ->badge($checkedCount)
-//                ->badgeColor('success')
-//                ->badgeIcon('heroicon-o-finger-print')
-//                ->modifyQueryUsing(fn ($query) =>
-//                $query->whereDate('date', $today)
-//                    ->whereNotNull('first_reading')
-//                ),
-//
-//            'not_checked' => Tab::make(__('ui.not_checked'))
-//                ->badge($notCheckedCount)
-//                ->badgeColor('warning')
-//                ->badgeIcon('heroicon-o-no-symbol')
-//                ->modifyQueryUsing(fn ($query) =>
-//                $query->whereDate('date', $today)
-//                    ->whereNull('first_reading')
-//                ),
-//
+    public function getTabs(): array
+    {
+        $user = auth()->user();
+        $today = Carbon::today()->toDateString();
+
+        // 🧩 1. Erişim kısıtlaması
+        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
+            $employeeQuery = Employee::query();
+            $reportQuery = Report::query();
+        } else {
+            $manager = Manager::where('employee_id', $user->employee_id)->first();
+
+            if (! $manager) {
+                $reportQuery = Report::whereRaw('1 = 0');
+            } else {
+                $employeeIds = Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                $tcNos = Employee::whereIn('id', $employeeIds)
+                    ->where('status', ManagerStatusEnum::ACTIVE)
+                    ->pluck('tc_no');
+
+                $reportQuery = Report::whereIn('tc_no', $tcNos);
+            }
+        }
+
+        // 🧮 2. Sayımlar
+        $todayReports = (clone $reportQuery)->whereDate('date', $today);
+
+        $allCount        = (clone $reportQuery)->count();
+
+        $checkedCount    = (clone $todayReports)->whereNotNull('first_reading')
+            ->where('status', '==', ManagerStatusEnum::ACTIVE)
+            ->count();
+
+        $notCheckedCount = (clone $todayReports)
+            ->whereNull('first_reading')
+            ->whereNull('last_reading')
+            ->where('status', '==', ManagerStatusEnum::ACTIVE)
+            ->count();
+
+        $activeCount     = (clone $todayReports)->where('status', ManagerStatusEnum::ACTIVE)->count();
+        $inactiveCount   = (clone $todayReports)->where('status', ManagerStatusEnum::INACTIVE)->count();
+
+        // 🧱 3. Sekmeler
+        return [
+            'all' => Tab::make(__('ui.all'))
+                ->badge($allCount)
+                ->badgeIcon('heroicon-o-rectangle-stack')
+                ->modifyQueryUsing(fn ($query) => $query),
+
 //            'active' => Tab::make(__('ui.active'))
 //                ->badge($activeCount)
 //                ->badgeColor('success')
 //                ->badgeIcon('heroicon-o-check-circle')
 //                ->modifyQueryUsing(fn ($query) =>
-//                $query->whereHas('employee', fn ($q) =>
-//                $q->where('status', ManagerStatusEnum::ACTIVE)
-//                )
+//                $query->where('status', ManagerStatusEnum::ACTIVE)
 //                ),
 //
 //            'inactive' => Tab::make(__('ui.inactive'))
@@ -101,12 +86,30 @@ class ListReports extends ListRecords
 //                ->badgeColor('danger')
 //                ->badgeIcon('heroicon-o-x-circle')
 //                ->modifyQueryUsing(fn ($query) =>
-//                $query->whereHas('employee', fn ($q) =>
-//                $q->where('status', ManagerStatusEnum::INACTIVE)
-//                )
+//                $query->where('status', ManagerStatusEnum::INACTIVE)
 //                ),
-//        ];
-//    }
+
+            'checked' => Tab::make(__('ui.checked'))
+                ->badge($checkedCount)
+                ->badgeColor('success')
+                ->badgeIcon('heroicon-o-finger-print')
+                ->modifyQueryUsing(fn ($query) =>
+                $query->whereDate('date', $today)
+                    ->whereNotNull('first_reading')
+                ),
+
+            'not_checked' => Tab::make(__('ui.not_checked'))
+                ->badge($notCheckedCount)
+                ->badgeColor('warning')
+                ->badgeIcon('heroicon-o-no-symbol')
+                ->modifyQueryUsing(fn ($query) =>
+                $query->whereDate('date', $today)
+                    ->whereNull('first_reading')
+                    ->whereNull('last_reading')
+                    ->where('status', '!=', ManagerStatusEnum::INACTIVE)
+                ),
+        ];
+    }
 
 
 

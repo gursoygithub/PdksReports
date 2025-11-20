@@ -11,21 +11,6 @@ class StaffExporter extends Exporter
 {
     protected static ?string $model = Staff::class;
 
-    public static function getEloquentQuery(): Builder
-    {
-        return parent::getEloquentQuery()->where(function ($query) {
-            if (auth()->user()?->hasRole('super_admin') || auth()->user()?->can('view_all_staff')
-            ) {
-                return $query;
-            }
-            return $query->where('manager_id', function ($subQuery) {
-                $subQuery->select('id')
-                    ->from('managers')
-                    ->where('user_id', auth()->id());
-            });
-        });
-    }
-
     public static function getColumns(): array
     {
         $isSuperAdmin = auth()->user()->hasRole('super_admin');
@@ -58,14 +43,6 @@ class StaffExporter extends Exporter
 
     public static function getCompletedNotificationBody(Export $export): string
     {
-//        $body = 'Your staff export has completed and ' . number_format($export->successful_rows) . ' ' . str('row')->plural($export->successful_rows) . ' exported.';
-//
-//        if ($failedRowsCount = $export->getFailedRowsCount()) {
-//            $body .= ' ' . number_format($failedRowsCount) . ' ' . str('row')->plural($failedRowsCount) . ' failed to export.';
-//        }
-//
-//        return $body;
-
         $rows = number_format($export->successful_rows);
         $body = $rows . ' veri dışa aktarılmaya hazır.';
 

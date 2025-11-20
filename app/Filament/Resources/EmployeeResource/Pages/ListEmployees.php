@@ -20,65 +20,111 @@ class ListEmployees extends ListRecords
         ];
     }
 
-//    public function getTabs(): array
-//    {
-//        $tabs = [];
-//        $canViewAllManagers = auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_employees');
-//
-//        // "All" tab
-//        $allQuery = Employee::query();
-//        if (!$canViewAllManagers) {
-//            $allQuery->where('created_by', auth()->id());
-//        }
-//
-//        $tabs['all'] = Tab::make(__('ui.all'))
-//            ->badge($allQuery->count())
-//            ->modifyQueryUsing(function ($query) use ($canViewAllManagers) {
-//                if (!$canViewAllManagers) {
-//                    $query->where('created_by', auth()->id());
-//                }
-//                return $query;
-//            });
-//
-//        // "Active" tab
-//        $activeQuery = Employee::query()->where('status', ManagerStatusEnum::ACTIVE);
-//        if (!$canViewAllManagers) {
-//            $activeQuery->where('created_by', auth()->id());
-//        }
-//
-//        // Active tab
-//        $tabs['active'] = Tab::make(__('ui.active'))
-//            ->badge($activeQuery->count())
-//            ->badgeIcon('heroicon-o-check-circle')
-//            ->badgeColor('success')
-//            ->modifyQueryUsing(function ($query) use ($canViewAllManagers) {
-//                $query->where('status', ManagerStatusEnum::ACTIVE);
-//                if (!$canViewAllManagers) {
-//                    $query->where('created_by', auth()->id());
-//                }
-//                return $query;
-//            });
-//
-//        // "Inactive" tab
-//        $inactiveQuery = Employee::query()->where('status', ManagerStatusEnum::INACTIVE);
-//        if (!$canViewAllManagers) {
-//            $inactiveQuery->where('created_by', auth()->id());
-//        }
-//
-//        // Inactive tab
-//        $tabs['inactive'] = Tab::make(__('ui.inactive'))
-//            ->badge($inactiveQuery->count())
-//            ->badgeIcon('heroicon-o-x-circle')
-//            ->badgeColor('danger')
-//            ->modifyQueryUsing(function ($query) use ($canViewAllManagers) {
-//                $query->where('status', ManagerStatusEnum::INACTIVE);
-//                if (!$canViewAllManagers) {
-//                    $query->where('created_by', auth()->id());
-//                }
-//                return $query;
-//            });
-//
-//        return $tabs;
-//
-//    }
+    public function getTabs(): array
+    {
+        $tabs = [];
+
+        $hasPermission = auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_employees');
+
+        $query = Employee::query();
+
+        if (! $hasPermission) {
+            $manager = \App\Models\Manager::where('employee_id', auth()->user()->employee_id)->first();
+            if ($manager) {
+                $employeeIds = \App\Models\Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                $query->whereIn('id', $employeeIds)
+                      ->where('status', ManagerStatusEnum::ACTIVE);
+            } else {
+                $query->whereRaw('1 = 0'); // No access
+            }
+        }
+
+        $totalCount = $query->count();
+
+        $tabs['all'] = Tab::make(__('ui.all'))
+            ->badge($query->count())
+            ->modifyQueryUsing(function ($query) use ($hasPermission) {
+                if (! $hasPermission) {
+                    $manager = \App\Models\Manager::where('employee_id', auth()->user()->employee_id)->first();
+                    if ($manager) {
+                        $employeeIds = \App\Models\Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                        $query->whereIn('id', $employeeIds)
+                              ->where('status', ManagerStatusEnum::ACTIVE);
+                    } else {
+                        $query->whereRaw('1 = 0'); // No access
+                    }
+                }
+                return $query;
+            });
+
+        $tabs['active'] = Tab::make(__('ui.active'))
+            ->badge(
+                Employee::query()
+                    ->when(! $hasPermission, function ($query) {
+                        $manager = \App\Models\Manager::where('employee_id', auth()->user()->employee_id)->first();
+                        if ($manager) {
+                            $employeeIds = \App\Models\Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                            $query->whereIn('id', $employeeIds)
+                                  ->where('status', ManagerStatusEnum::ACTIVE);
+                        } else {
+                            $query->whereRaw('1 = 0'); // No access
+                        }
+                    })
+                    ->where('status', ManagerStatusEnum::ACTIVE)
+                    ->count()
+            )
+            ->badgeIcon('heroicon-o-check-circle')
+            ->badgeColor('success')
+            ->modifyQueryUsing(function ($query) use ($hasPermission) {
+                $query->where('status', ManagerStatusEnum::ACTIVE);
+                if (! $hasPermission) {
+                    $manager = \App\Models\Manager::where('employee_id', auth()->user()->employee_id)->first();
+                    if ($manager) {
+                        $employeeIds = \App\Models\Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                        $query->whereIn('id', $employeeIds)
+                              ->where('status', ManagerStatusEnum::ACTIVE);
+                    } else {
+                        $query->whereRaw('1 = 0'); // No access
+                    }
+                }
+                return $query;
+            });
+
+        $tabs['inactive'] = Tab::make(__('ui.inactive'))
+            ->badge(
+                Employee::query()
+                    ->when(! $hasPermission, function ($query) {
+                        $manager = \App\Models\Manager::where('employee_id', auth()->user()->employee_id)->first();
+                        if ($manager) {
+                            $employeeIds = \App\Models\Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                            $query->whereIn('id', $employeeIds)
+                                  ->where('status', ManagerStatusEnum::ACTIVE);
+                        } else {
+                            $query->whereRaw('1 = 0'); // No access
+                        }
+                    })
+                    ->where('status', ManagerStatusEnum::INACTIVE)
+                    ->count()
+            )
+            ->badgeIcon('heroicon-o-x-circle')
+            ->badgeColor('danger')
+            ->modifyQueryUsing(function ($query) use ($hasPermission) {
+                $query->where('status', ManagerStatusEnum::INACTIVE);
+                if (! $hasPermission) {
+                    $manager = \App\Models\Manager::where('employee_id', auth()->user()->employee_id)->first();
+                    if ($manager) {
+                        $employeeIds = \App\Models\Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                        $query->whereIn('id', $employeeIds)
+                              ->where('status', ManagerStatusEnum::ACTIVE);
+                    } else {
+                        $query->whereRaw('1 = 0'); // No access
+                    }
+                }
+                return $query;
+            });
+
+
+        return $tabs;
+
+    }
 }

@@ -39,126 +39,27 @@ class ReportResource extends Resource
         return __('ui.report_management');
     }
 
-//    public static function getNavigationBadge(): ?string
-//    {
-//        $user = auth()->user();
-//
-//        // 🧩 Super admin veya "view_all_reports" izni olan kullanıcı her şeyi görür
-//        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
-//            return Employee::distinct('tc_no')->count('tc_no');
-//        }
-//
-//        // 🧩 Manager kaydı bulunmuyorsa
-//        $manager = Manager::where('user_id', $user->id)->first();
-//
-//        if (! $manager) {
-//            return null; // Manager değilse badge gösterme
-//        }
-//
-//        // 🧩 Manager’a bağlı çalışanların ID'leri
-//        $employeeIds = Staff::where('manager_id', $manager->id)->pluck('employee_id');
-//
-//        if ($employeeIds->isEmpty()) {
-//            return 0;
-//        }
-//
-//        // 🧩 Çalışanların TC numaraları
-//        $tcNumbers = Employee::whereIn('id', $employeeIds)->pluck('tc_no');
-//
-//        if ($tcNumbers->isEmpty()) {
-//            return 0;
-//        }
-//
-//        // 🧩 Report tablosunda benzersiz çalışan (tc_no) bazlı sayım
-//        return Report::whereIn('tc_no', $tcNumbers)
-//            ->distinct('tc_no')
-//            ->count('tc_no');
-//    }
+    public static function getNavigationBadge(): ?string
+    {
+        $hasPermission = auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_reports');
 
-//    public static function getNavigationBadge(): ?string
-//    {
-//        $user = auth()->user();
-//
-//        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
-//            return static::getModel()::count();
-//            //return static::getModel()::where('status', ManagerStatusEnum::ACTIVE)->count();
-//        }
-//
-//        // Get staff IDs by their manager's user ID
-//        $staffIds = Staff::whereIn('manager_id', function ($query) use ($user) {
-//            $query->select('id')
-//                ->from('managers')
-//                ->where('user_id', $user->id);
-//        })->pluck('id')->toArray();
-//
-//        return static::getModel()::whereIn('id', function ($query) use ($staffIds) {
-//            $query->select('report_id')
-//                ->from('staff')
-//                ->whereIn('id', $staffIds);
-//        })->count();
-//    }
-
-//    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
-//    {
-//        $user = auth()->user();
-//
-//        // Yetkili kullanıcılar tüm raporları görebilir
-//        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
-//            return parent::getEloquentQuery();
-//        }
-//
-//        // 1️⃣ Kullanıcıya bağlı manager'ı bul
-//        $manager = \App\Models\Manager::where('user_id', $user->id)->first();
-//
-//        if (! $manager) {
-//            // Eğer kullanıcı manager değilse, boş sonuç dön
-//            return parent::getEloquentQuery()->whereRaw('1=0');
-//        }
-//
-//        // 2️⃣ Manager’ın staff’larından çalışanların ID’lerini çek
-//        $employeeIds = \App\Models\Staff::where('manager_id', $manager->id)
-//            ->pluck('employee_id')
-//            ->toArray();
-//
-//        if (empty($employeeIds)) {
-//            return parent::getEloquentQuery()->whereRaw('1=0');
-//        }
-//
-//        // 3️⃣ Bu çalışanların tc_no değerlerini çek
-//        $tcNumbers = \App\Models\Employee::whereIn('id', $employeeIds)
-//            ->pluck('tc_no')
-//            ->toArray();
-//
-//        if (empty($tcNumbers)) {
-//            return parent::getEloquentQuery()->whereRaw('1=0');
-//        }
-//
-//        // 4️⃣ Raporları bu TC numaralarına göre filtrele
-//        return parent::getEloquentQuery()->whereIn('tc_no', $tcNumbers);
-//    }
-
-
-//    public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
-//    {
-//        $user = auth()->user();
-//
-//        if ($user->hasRole('super_admin') || $user->can('view_all_reports')) {
-//            return parent::getEloquentQuery();
-//        }
-//
-//        // Get staff IDs by their manager's user ID
-//        $staffIds = Staff::whereIn('manager_id', function ($query) use ($user) {
-//            $query->select('id')
-//                ->from('managers')
-//                ->where('user_id', $user->id);
-//        })->pluck('id')->toArray();
-//
-//        return parent::getEloquentQuery()->whereIn('id', function ($query) use ($staffIds) {
-//            $query->select('report_id')
-//                ->from('staff')
-//                ->whereIn('id', $staffIds);
-//        });
-//    }
+        if ($hasPermission) {
+            $count = Report::count();
+            return $count > 0 ? (string)$count : null;
+        } else {
+            $manager = Manager::where('employee_id', auth()->user()->employee_id)->first();
+            if (! $manager) {
+                return null;
+            } else {
+                $employeeIds = Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                $tcNos = Employee::whereIn('id', $employeeIds)
+                    ->where('status', ManagerStatusEnum::ACTIVE)
+                    ->pluck('tc_no');
+                $count = Report::whereIn('tc_no', $tcNos)->count();
+                return $count > 0 ? (string)$count : null;
+            }
+        }
+    }
 
     public static function form(Form $form): Form
     {

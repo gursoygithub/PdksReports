@@ -25,7 +25,7 @@ class ManagerResource extends Resource
 {
     protected static ?string $model = Manager::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-user-group';
+    protected static ?string $navigationIcon = 'heroicon-o-users';
 
     public static function getModelLabel(): string
     {

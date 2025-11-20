@@ -19,18 +19,18 @@ class StaffResource extends Resource
 {
     protected static ?string $model = Staff::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-users';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     //protected static bool $shouldRegisterNavigation = false;
 
     public static function getModelLabel(): string
     {
-        return __('ui.staff');
+        return __('ui.manager_staff');
     }
 
     public static function getPluralModelLabel(): string
     {
-        return __('ui.staffs');
+        return __('ui.manager_staffs');
     }
 
     public static function getNavigationGroup(): ?string
@@ -38,32 +38,26 @@ class StaffResource extends Resource
         return __('ui.report_management');
     }
 
-//    public static function getNavigationBadge(): ?string
-//    {
-//        if (auth()->user()?->hasRole('super_admin') || auth()->user()?->can('view_all_staff')) {
-//            return static::getModel()::count();
-//        }
-//        return static::getModel()::whereIn('manager_id', function ($query) {
-//            $query->select('id')
-//                ->from('managers')
-//                ->where('employee_id', auth()->id());
-//        })->count();
-//    }
+    public static function getNavigationBadge(): ?string
+    {
+        $hasPermission = auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_staff');
 
-//    public static function getEloquentQuery(): Builder
-//    {
-//        return parent::getEloquentQuery()->where(function ($query) {
-//            if (auth()->user()?->hasRole('super_admin') || auth()->user()?->can('view_all_staff')
-//            ) {
-//                return $query;
-//            }
-//            return $query->whereIn('manager_id', function ($subQuery) {
-//                $subQuery->select('id')
-//                    ->from('managers')
-//                    ->where('user_id', auth()->id());
-//            });
-//        });
-//    }
+        if ($hasPermission) {
+            $count = Staff::count();
+            return $count > 0 ? (string)$count : null;
+        } else {
+            $manager = \App\Models\Manager::where('employee_id', auth()->user()->employee_id)->first();
+            if (! $manager) {
+                return null;
+            } else {
+                $employeeIds = Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                $count = \App\Models\Employee::whereIn('id', $employeeIds)
+                    ->where('status', \App\Enums\ManagerStatusEnum::ACTIVE)
+                    ->count();
+                return $count > 0 ? (string)$count : null;
+            }
+        }
+    }
 
     protected static ?int $navigationSort = 3;
 
@@ -81,20 +75,15 @@ class StaffResource extends Resource
             ->defaultSort('updated_at', 'desc')
             ->paginated([5, 10, 25, 50])
             ->columns([
-                Tables\Columns\TextColumn::make('employee.tc_no')
-                    ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_tc_no'))
-                    ->label(__('ui.tc_no'))
+                Tables\Columns\TextColumn::make('manager.user.name')
+                    ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_managers'))
+                    ->label(__('ui.manager'))
+                    ->badge()
+                    ->color('primary')
                     ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-//                Tables\Columns\TextColumn::make('employee.full_name')
-//                    ->label(__('ui.full_name'))
-//                    ->badge()
-//                    ->color('primary')
-//                    ->searchable()
-//                    ->sortable(),
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('employee.full_name')
-                    ->label(__('ui.full_name'))
+                    ->label(__('ui.staff'))
                     ->badge()
                     ->color('primary')
                     ->sortable(query: fn ($query, $direction) =>
@@ -109,7 +98,13 @@ class StaffResource extends Resource
                         $q->whereRaw("CONCAT(first_name, ' ', last_name) LIKE ?", ["%{$search}%"])
                         )
                     ),
-        Tables\Columns\TextColumn::make('employee.latestReport.department_name')
+                Tables\Columns\TextColumn::make('employee.tc_no')
+                    ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_tc_no'))
+                    ->label(__('ui.tc_no'))
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('employee.latestReport.department_name')
                     ->label(__('ui.department'))
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
@@ -117,13 +112,6 @@ class StaffResource extends Resource
                     ->label(__('ui.position'))
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('manager.user.name')
-                    ->visible(fn () => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_managers'))
-                    ->label(__('ui.manager'))
-                    ->badge()
-                    ->color('primary')
-                    ->searchable()
-                    ->sortable(),
                 Tables\Columns\TextColumn::make('createdBy.name')
                     ->visible(fn () => auth()->user()->hasRole('super_admin'))
                     ->label(__('ui.created_by'))

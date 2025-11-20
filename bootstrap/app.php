@@ -19,10 +19,20 @@ return Application::configure(basePath: dirname(__DIR__))
             ->everyFiveMinutes()
             ->timezone(timezone: config('app.timezone', 'UTC'))
             ->onSuccess(callback: function (): void {
-                info(message: 'Günlük rapor komutu başarıyla tamamlandı.');
+                info(message: 'Rapor senkronizasyonu başarıyla tamamlandı.');
             })
             ->onFailure(callback: function ():void {
-                info(message: 'Günlük rapor komutu başarısız oldu.');
+                info(message: 'Rapor senkronizasyonu başarısız oldu.');
+            });
+
+        $schedule->command('employee:daily')
+            ->dailyAt('05:00')
+            ->timezone(config('app.timezone', 'UTC'))
+            ->onSuccess(function () {
+                info('Personel veri senkronizasyonu başarıyla tamamlandı.');
+            })
+            ->onFailure(function () {
+                info('Personel veri senkronizasyonu başarısız oldu.');
             });
     })
     ->withExceptions(function (Exceptions $exceptions) {

@@ -63,4 +63,22 @@ class Employee extends Model
         return $this->hasMany(Staff::class, 'employee_id', 'id');
     }
 
+    public static function query()
+    {
+        $hasPermission = auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_employees');
+
+        if ($hasPermission) {
+            return parent::query();
+        } else {
+            $manager = \App\Models\Manager::where('employee_id', auth()->user()->employee_id)->first();
+            if (! $manager) {
+                return parent::query()->whereRaw('1 = 0'); // No records
+            } else {
+                $employeeIds = \App\Models\Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                return parent::query()->whereIn('id', $employeeIds)
+                    ->where('status', ManagerStatusEnum::ACTIVE);
+            }
+        }
+    }
+
 }

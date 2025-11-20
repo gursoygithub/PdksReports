@@ -37,6 +37,27 @@ class EmployeeResource extends Resource
         return __('ui.employee_management');
     }
 
+    public static function getNavigationBadge(): ?string
+    {
+        $hasPermission = auth()->user()->hasRole('super_admin') || auth()->user()->can('view_all_employees');
+
+        if ($hasPermission) {
+            $count = Employee::count();
+            return $count > 0 ? (string)$count : null;
+        } else {
+            $manager = \App\Models\Manager::where('employee_id', auth()->user()->employee_id)->first();
+            if (! $manager) {
+                return null;
+            } else {
+                $employeeIds = \App\Models\Staff::where('manager_id', $manager->id)->pluck('employee_id');
+                $count = Employee::whereIn('id', $employeeIds)
+                    ->where('status', ManagerStatusEnum::ACTIVE)
+                    ->count();
+                return $count > 0 ? (string)$count : null;
+            }
+        }
+    }
+
 
     public static function form(Form $form): Form
     {
