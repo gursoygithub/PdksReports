@@ -80,6 +80,29 @@ class StaffsRelationManager extends RelationManager
                                                 ->mapWithKeys(fn($employee) => [$employee->id => $employee->full_name])
                                                 ->toArray();
                                         })
+//                                        ->options(function (callable $get) {
+//                                            $manager = $this->ownerRecord;
+//
+//                                            if ($manager && ! $manager->relationLoaded('user')) {
+//                                                $manager->load('user');
+//                                            }
+//
+//                                            $managerEmployeeId = optional($manager->user)->employee_id;
+//
+//                                            // Şu anda formda seçili olan çalışan id'sini al
+//                                            $currentEmployeeId = $get('employee_id');
+//
+//                                            return \App\Models\Employee::query()
+//                                                ->where('status', \App\Enums\ManagerStatusEnum::ACTIVE)
+//                                                // Eğer yeni kayıt ekleniyorsa sadece staff olmayanlar
+//                                                // Ama update yapılıyorsa mevcut seçili personel dahil edilmeli
+//                                                ->when(!$currentEmployeeId, fn($q) => $q->where('is_staff', \App\Enums\BooleanStatusEnum::NO))
+//                                                ->when($managerEmployeeId, fn($q) => $q->where('id', '!=', $managerEmployeeId))
+//                                                ->orderBy('first_name')
+//                                                ->get()
+//                                                ->mapWithKeys(fn($employee) => [$employee->id => $employee->full_name])
+//                                                ->toArray();
+//                                        })
                                         //->unique(ignoreRecord: true)
                                         ->required()
                                         ->validationMessages([
