@@ -58,6 +58,7 @@ class EmployeeResource extends Resource
         }
     }
 
+    protected static ?int $navigationSort = 100;
 
     public static function form(Form $form): Form
     {

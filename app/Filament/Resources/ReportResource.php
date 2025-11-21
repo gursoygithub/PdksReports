@@ -62,7 +62,7 @@ class ReportResource extends Resource
         }
     }
 
-    protected static ?int $navigationSort = 200;
+    protected static ?int $navigationSort = 2;
 
     public static function form(Form $form): Form
     {

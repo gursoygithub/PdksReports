@@ -51,20 +51,7 @@ class ManagerResource extends Resource
         }
     }
 
-//    public static function getEloquentQuery(): Builder
-//    {
-//        return parent::getEloquentQuery()->where(function ($query) {
-//
-//            if (auth()->user()?->hasRole('super_admin') || auth()->user()?->can('view_all_managers')
-//            ) {
-//                return $query;
-//            }
-//
-//            return $query->where('created_by', auth()->id());
-//        });
-//    }
-
-    //protected static ?int $navigationSort = 2;
+    protected static ?int $navigationSort = 200;
 
     public static function form(Form $form): Form
     {

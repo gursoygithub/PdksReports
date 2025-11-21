@@ -36,7 +36,7 @@ class UserResource extends Resource
 
     public static function getNavigationGroup(): ?string
     {
-        return __('ui.user_management');
+        return __('ui.panel_management');
     }
 
     public static function getNavigationBadge(): ?string
@@ -64,6 +64,8 @@ class UserResource extends Resource
             return $query->where('created_by', auth()->id());
         });
     }
+
+    protected static ?int $navigationSort = 300;
 
     public static function form(Form $form): Form
     {
