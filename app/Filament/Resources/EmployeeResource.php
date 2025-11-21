@@ -70,6 +70,8 @@ class EmployeeResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
+            ->defaultSort('first_name')
+            ->paginated([5, 10, 25, 50])
             ->columns([
                 Tables\Columns\TextColumn::make('tc_no')
                     ->visible(fn ($record) => auth()->user()->hasRole('super_admin') || auth()->user()->can('view_tc_no'))
